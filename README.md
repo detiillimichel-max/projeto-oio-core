@@ -6,70 +6,71 @@
     <title>OIO ONE - Michel</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
-        /* Identidade: O Usuário é o Centro */
         #camera { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; filter: brightness(0.7); }
-        
-        /* Camada de Interação: Gaveta de Vidro (30%) */
         #interface-oio { 
             position: absolute; bottom: 0; width: 100%; height: 35%; 
-            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px);
-            border-radius: 30px 30px 0 0; z-index: 10; transition: 0.5s;
-            border-top: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; align-items: center;
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px);
+            border-radius: 30px 30px 0 0; z-index: 10; border-top: 1px solid rgba(255,255,255,0.2);
+            display: flex; flex-direction: column; align-items: center;
         }
-
-        /* Ergonomia Dinâmica: Menu de Apps Arrastável */
-        .menu-apps { display: flex; gap: 20px; padding: 20px; overflow-x: auto; width: 90%; }
+        .menu-apps { display: flex; gap: 20px; padding: 25px; overflow-x: auto; width: 90%; }
         .app-icon { 
-            min-width: 60px; height: 60px; background: rgba(255,255,255,0.2); 
-            border-radius: 15px; display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 10px; flex-direction: column; cursor: pointer;
+            min-width: 65px; height: 65px; background: rgba(255,255,255,0.15); 
+            border-radius: 18px; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 11px; flex-direction: column; cursor: pointer;
         }
-
-        /* Salto Quântico: Miniaturas Rápidas */
-        #salto-quantico { position: fixed; top: 20px; right: 20px; z-index: 20; display: flex; gap: 10px; }
-        .mini-tela { width: 40px; height: 70px; background: rgba(255,255,255,0.3); border: 1px solid #fff; border-radius: 5px; }
-
-        /* Camada Sensorial: A Estrela */
         #estrela-oio { 
-            position: fixed; bottom: 40%; right: 5%; width: 50px; height: 50px; 
+            position: fixed; bottom: 40%; right: 8%; width: 55px; height: 55px; 
             background: linear-gradient(45deg, #00f2fe, #4facfe); border-radius: 50%; 
-            z-index: 30; display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 0 20px rgba(79, 172, 254, 0.8); cursor: pointer;
+            z-index: 30; display: flex; align-items: center; justify-content: center; font-size: 24px;
         }
     </style>
 </head>
 <body>
-
     <video id="camera" autoplay playsinline></video>
-
-    <div id="salto-quantico">
-        <div class="mini-tela"></div>
-        <div class="mini-tela" style="opacity: 0.5;"></div>
-    </div>
-
-<div class="app-icon" onclick="alert('Iniciando OIO Mensagens...')">📩<br>Mensagens</div>
-
+    <div id="estrela-oio" onclick="sentirOIO()">✨</div>
     <div id="interface-oio">
-        <div style="width: 40px; height: 5px; background: rgba(255,255,255,0.5); margin: 10px; border-radius: 10px;"></div>
+        <div style="width: 45px; height: 4px; background: rgba(255,255,255,0.3); margin: 12px; border-radius: 10px;"></div>
         <div class="menu-apps">
             <div class="app-icon" onclick="window.location.href='https://google.com'">🌐<br>Google</div>
             <div class="app-icon" onclick="window.location.href='https://youtube.com'">📺<br>YouTube</div>
-            <div class="app-icon">📩<br>Mensagens</div>
-            <div class="app-icon">📞<br>Contatos</div>
-            <div class="app-icon">🗺️<br>Maps</div>
+            <div class="app-icon" onclick="abrirChat()">📩<br>Mensagens</div>
+            <div class="app-icon" onclick="perguntarIA()">🤖<br>OIO IA</div>
         </div>
-        <p style="color: white; font-size: 14px; margin-top: 10px;">OIO ONE - Autoria: Michel</p>
+        <p style="color: rgba(255,255,255,0.6); font-size: 12px;">OIO ONE • Autoria Michel Detilli</p>
     </div>
 
-    <script>
-        // Ativa Identidade
-        const v = document.getElementById('camera');
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then(s => v.srcObject = s);
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
-        // Camada Sensorial (Vibração OIO)
+    <script>
+        const firebaseConfig = { databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        const v = document.getElementById('camera');
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+            .then(s => v.srcObject = s).catch(e => console.log("Câmera pendente"));
+
         function sentirOIO() {
             if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            console.log("OIO ONE: Michel Identificado.");
+            alert("OIO ONE: Identidade Michel Confirmada.");
+        }
+
+        function abrirChat() {
+            const msg = prompt("Digite sua memória para o OIO:");
+            if(msg) {
+                db.ref('memorias').push({ texto: msg, autor: "Michel", data: Date.now() });
+                alert("Memória gravada no Firebase!");
+            }
+        }
+
+        async function perguntarIA() {
+            const p = prompt("O que deseja saber do OIO CORE?");
+            if(p) {
+                db.ref('ia_consultas').push({ pergunta: p, usuario: "Michel", status: "analisando" });
+                alert("OIO IA: Michel, recebi sua mensagem. Analisando seu DNA de dados...");
+            }
         }
     </script>
 </body>
