@@ -3,27 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OIO ONE - Vibe</title>
+    <title>OIO ONE - Michel</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
-        #camera { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; }
-        #caderno { 
-            position: absolute; top: 10%; left: 5%; width: 90%; height: 75%; 
-            background: #fff; border-radius: 5px; z-index: 10; padding: 20px;
-            background-image: linear-gradient(#e1e1e1 1px, transparent 1px);
-            background-size: 100% 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: 0.5s;
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
+        /* Camada de Identidade: Michel é o Centro */
+        #camera { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; filter: brightness(0.8); }
+        
+        /* Camada de Interação: Gaveta de Vidro (30%) */
+        #interface-oio { 
+            position: absolute; bottom: 0; width: 100%; height: 35%; 
+            background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px);
+            border-radius: 30px 30px 0 0; z-index: 10; transition: 0.5s;
+            border-top: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; align-items: center;
         }
-        #orelha { 
-            position: absolute; top: 0; right: 0; width: 0; height: 0; 
-            border-style: solid; border-width: 0 40px 40px 0; 
-            border-color: transparent transparent #d1d1d1 transparent; cursor: pointer; 
+
+        /* Ergonomia Dinâmica: Menu de Apps */
+        .menu-apps { display: flex; gap: 20px; padding: 25px; overflow-x: auto; width: 90%; }
+        .app-icon { 
+            min-width: 65px; height: 65px; background: rgba(255,255,255,0.15); 
+            border-radius: 18px; display: flex; align-items: center; justify-content: center;
+            color: white; font-size: 11px; flex-direction: column; cursor: pointer;
+            border: 1px solid rgba(255,255,255,0.1);
         }
-        #estrela { 
-            position: fixed; bottom: 5%; right: 5%; width: 60px; height: 60px; 
-            background: cyan; border-radius: 50%; z-index: 20; 
-            display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 0 20px cyan; font-size: 30px; cursor: pointer;
+
+        /* Camada Sensorial: Estrela IA */
+        #estrela-oio { 
+            position: fixed; bottom: 40%; right: 8%; width: 55px; height: 55px; 
+            background: linear-gradient(45deg, #00f2fe, #4facfe); border-radius: 50%; 
+            z-index: 30; display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 0 25px rgba(79, 172, 254, 0.6); cursor: pointer; font-size: 24px;
         }
     </style>
 </head>
@@ -31,35 +39,32 @@
 
     <video id="camera" autoplay playsinline></video>
 
-    <div id="caderno">
-        <div id="orelha" onclick="fecharCaderno()"></div>
-        <h2 style="margin:0; color:#333;">Vibe Família</h2>
-        <p style="color:#666;">OIO ONE - Conexão Real</p>
-        <hr style="border:0; border-top:1px solid #ccc;">
-        <p>Olá, Michel! Seu app está online.</p>
+    <div id="estrela-oio" onclick="sentirOIO()">✨</div>
+
+    <div id="interface-oio">
+        <div style="width: 45px; height: 4px; background: rgba(255,255,255,0.3); margin: 12px; border-radius: 10px;"></div>
+        <div class="menu-apps">
+            <div class="app-icon" onclick="window.location.href='https://google.com'">🌐<br>Google</div>
+            <div class="app-icon" onclick="window.location.href='https://youtube.com'">📺<br>YouTube</div>
+            <div class="app-icon">📩<br>Mensagens</div>
+            <div class="app-icon">🗺️<br>Maps</div>
+        </div>
+        <p style="color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 5px;">OIO ONE • Autoria Michel Detilli</p>
     </div>
 
-    <div id="estrela" onclick="confirmarIA()">✨</div>
-
     <script>
-        // Ativa a Identidade (Câmera)
-        const video = document.getElementById('camera');
+        // Ativa Identidade (Câmera Real)
+        const v = document.getElementById('camera');
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-            .then(s => video.srcObject = s)
-            .catch(e => console.log("Erro na câmera"));
+            .then(s => v.srcObject = s)
+            .catch(e => console.log("Câmera pendente"));
 
-        // Ergonomia Dinâmica (Gesto)
-        function fecharCaderno() {
-            const c = document.getElementById('caderno');
-            c.style.transform = c.style.transform === 'translateX(-120%)' ? 'translateX(0)' : 'translateX(-120%)';
-            if(navigator.vibrate) navigator.vibrate(50);
-        }
-
-        // Camada Sensorial (Estrela)
-        function confirmarIA() {
+        // Camada Sensorial
+        function sentirOIO() {
             if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
-            alert("OIO ONE: Michel Identificado!");
+            alert("OIO ONE: Identidade Michel Confirmada.");
         }
     </script>
 </body>
 </html>
+
