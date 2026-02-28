@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OIO ONE - Vibe</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: sans-serif; }
+        #camera { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; }
+        #caderno { 
+            position: absolute; top: 10%; left: 5%; width: 90%; height: 75%; 
+            background: #fff; border-radius: 5px; z-index: 10; padding: 20px;
+            background-image: linear-gradient(#e1e1e1 1px, transparent 1px);
+            background-size: 100% 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: 0.5s;
+        }
+        #orelha { 
+            position: absolute; top: 0; right: 0; width: 0; height: 0; 
+            border-style: solid; border-width: 0 40px 40px 0; 
+            border-color: transparent transparent #d1d1d1 transparent; cursor: pointer; 
+        }
+        #estrela { 
+            position: fixed; bottom: 5%; right: 5%; width: 60px; height: 60px; 
+            background: cyan; border-radius: 50%; z-index: 20; 
+            display: flex; align-items: center; justify-content: center; 
+            box-shadow: 0 0 20px cyan; font-size: 30px; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <video id="camera" autoplay playsinline></video>
+
+    <div id="caderno">
+        <div id="orelha" onclick="fecharCaderno()"></div>
+        <h2 style="margin:0; color:#333;">Vibe Família</h2>
+        <p style="color:#666;">OIO ONE - Conexão Real</p>
+        <hr style="border:0; border-top:1px solid #ccc;">
+        <p>Olá, Michel! Seu app está online.</p>
+    </div>
+
+    <div id="estrela" onclick="confirmarIA()">✨</div>
+
+    <script>
+        // Ativa a Identidade (Câmera)
+        const video = document.getElementById('camera');
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+            .then(s => video.srcObject = s)
+            .catch(e => console.log("Erro na câmera"));
+
+        // Ergonomia Dinâmica (Gesto)
+        function fecharCaderno() {
+            const c = document.getElementById('caderno');
+            c.style.transform = c.style.transform === 'translateX(-120%)' ? 'translateX(0)' : 'translateX(-120%)';
+            if(navigator.vibrate) navigator.vibrate(50);
+        }
+
+        // Camada Sensorial (Estrela)
+        function confirmarIA() {
+            if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            alert("OIO ONE: Michel Identificado!");
+        }
+    </script>
+</body>
+</html>
