@@ -1,66 +1,41 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OIO ONE - CHAT REAL</title>
-    <style>
-        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
-        #camera { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; filter: brightness(0.4) blur(2px); }
-        #janela-chat { position: fixed; top: 10%; left: 5%; width: 90%; height: 55%; background: rgba(0,0,0,0.85); backdrop-filter: blur(20px); border-radius: 30px; z-index: 100; border: 1px solid #00f2fe; padding: 20px; display: none; flex-direction: column; }
-        #lista-msgs { flex: 1; overflow-y: auto; color: white; font-size: 20px; }
-        .balao { background: rgba(0, 242, 254, 0.2); padding: 12px; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid #00f2fe; }
-        #interface-oio { position: absolute; bottom: 20px; left: 5%; width: 90%; height: 140px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(50px); border-radius: 40px; z-index: 10; display: flex; flex-direction: column; align-items: center; }
-        .menu-apps { display: flex; gap: 15px; padding: 20px; }
-        .app-icon { min-width: 70px; height: 70px; background: rgba(255,255,255,0.1); border-radius: 20px; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; flex-direction: column; }
-    </style>
-</head>
-<body>
-    <video id="camera" autoplay playsinline></video>
-    <audio id="somMsg" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
+<script>
+    const firebaseConfig = { databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-    <div id="janela-chat">
-        <div id="lista-msgs"></div>
-        <input id="campo-texto" type="text" placeholder="Mensagem..." style="width:100%; padding:15px; border-radius:15px; border:none; font-size:18px;">
-        <button onclick="enviarVibeReal()" style="width:100%; padding:18px; margin-top:10px; border-radius:15px; background:#00f2fe; font-weight:bold; font-size:20px;">ENVIAR</button>
-        <button onclick="document.getElementById('janela-chat').style.display='none'" style="color:gray; background:none; border:none; margin-top:10px;">FECHAR</button>
-    </div>
+    // PERGUNTA O NOME ASSIM QUE ABRE
+    let meuNome = localStorage.getItem("usuario_oio") || prompt("Qual é o seu nome?");
+    if(!meuNome) meuNome = "Visitante";
+    localStorage.setItem("usuario_oio", meuNome);
 
-    <div id="interface-oio">
-        <div style="width: 40px; height: 5px; background: rgba(255,255,255,0.3); margin-top: 15px; border-radius: 10px;"></div>
-        <div class="menu-apps">
-            <div class="app-icon" onclick="abrirVibe()">📩<br>Mensagens</div>
-            <div class="app-icon" onclick="location.href='https://youtube.com'">📺<br>YouTube</div>
-        </div>
-    </div>
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then(s => document.getElementById('camera').srcObject = s);
 
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <script>
-        const firebaseConfig = { databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/" };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then(s => document.getElementById('camera').srcObject = s);
-
-        function abrirVibe() {
-            document.getElementById('janela-chat').style.display = 'flex';
-            db.ref('chat_geral').limitToLast(10).on('value', (s) => {
-                const lista = document.getElementById('lista-msgs');
-                lista.innerHTML = "";
-                s.forEach(child => {
-                    lista.innerHTML += `<div class="balao"><b>${child.val().autor}:</b> ${child.val().texto}</div>`;
-                });
-                document.getElementById('somMsg').play();
+    function abrirVibe() {
+        document.getElementById('janela-chat').style.display = 'flex';
+        db.ref('chat_geral').limitToLast(15).on('value', (snapshot) => {
+            const lista = document.getElementById('lista-msgs');
+            lista.innerHTML = "";
+            snapshot.forEach(item => {
+                const dado = item.val();
+                // COLOCA LADOS DIFERENTES PARA VOCÊ E PARA OS OUTROS
+                const alinhamento = dado.autor === meuNome ? "text-align:right; color:#00f2fe;" : "text-align:left; color:#fff;";
+                lista.innerHTML += `<div class="balao" style="${alinhamento}"><b>${dado.autor}:</b><br>${dado.texto}</div>`;
             });
-        }
+            document.getElementById('somMsg').play();
+            lista.scrollTop = lista.scrollHeight;
+        });
+    }
 
-        function enviarVibeReal() {
-            const txt = document.getElementById('campo-texto').value;
-            if(txt) {
-                db.ref('chat_geral').push({ texto: txt, autor: "Michel", data: Date.now() });
-                document.getElementById('campo-texto').value = "";
-            }
+    function enviarVibeReal() {
+        const input = document.getElementById('campo-texto');
+        if(input.value) {
+            // AGORA ENVIA COM O NOME QUE A PESSOA DIGITOU
+            db.ref('chat_geral').push({ 
+                texto: input.value, 
+                autor: meuNome, 
+                data: Date.now() 
+            });
+            input.value = "";
         }
-    </script>
-</body>
-</html>
+    }
+</script>
