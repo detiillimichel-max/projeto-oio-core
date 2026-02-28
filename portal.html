@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OIO PORTAL - MICHEL DETILLI</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
+        #camera-fundo { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; filter: brightness(0.4); }
+        
+        /* CAMADA 1: PORTAL DE IDENTIDADE COM PAPEL DE PAREDE */
+        #camada-identidade { 
+            position: fixed; inset: 0; z-index: 1000; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            /* COLOQUE AQUI O LINK DA SUA IMAGEM DE FUNDO (COMO A 1000028987.png) */
+            background-image: url('https://img.image_1000028987.png'); 
+            background-size: cover; background-position: center;
+        }
+        .portal-vidro {
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(25px); 
+            border-radius: 40px; border: 2px solid #00f2fe; 
+            padding: 30px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            width: 80%; max-width: 400px;
+        }
+        .circulo-foto { width: 120px; height: 120px; border: 3px solid #00f2fe; border-radius: 50%; margin-bottom: 25px; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; font-size: 50px; cursor: pointer; }
+
+        /* INPUTS E BOTÕES GIGANTES DO PORTAL */
+        input#nome-user { width: 100%; padding: 20px; border-radius: 15px; text-align: center; font-size: 22px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: white; }
+        button#btn-entrar { margin-top: 25px; width: 100%; padding: 22px; border-radius: 15px; background: #00f2fe; border: none; font-weight: bold; font-size: 24px; color: black; }
+
+        /* CAMADA 2: INTERAÇÃO (CHAT ORIGINAL QUE FUNCIONA) */
+        #camada-vibe { position: fixed; inset: 0; z-index: 10; display: none; flex-direction: column; }
+        #janela-mensagens { flex: 1; margin: 20px; background: rgba(0,0,0,0.7); backdrop-filter: blur(15px); border-radius: 30px; border: 1px solid rgba(0,242,254,0.3); display: flex; flex-direction: column; padding: 15px; }
+        #lista-msgs { flex: 1; overflow-y: auto; font-size: 22px; }
+        .balao { background: rgba(0, 242, 254, 0.1); padding: 12px; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid #00f2fe; }
+
+        /* RODAPÉ ORGÂNICO COM ÍCONES PEQUENOS */
+        .area-escrita { display: flex; gap: 8px; padding: 10px; }
+        input#msg-txt { flex: 1; padding: 18px; border-radius: 15px; border: none; font-size: 20px; background: #eee; color: #000; }
+        .menu-inferior { display: flex; justify-content: space-around; padding: 15px; background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); border-radius: 35px 35px 0 0; }
+        .btn-mini { font-size: 26px; background: none; border: none; color: white; display: flex; flex-direction: column; align-items: center; font-size: 11px; }
+    </style>
+</head>
+<body>
+    <video id="camera-fundo" autoplay playsinline></video>
+    <audio id="somMsg" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
+
+    <div id="camada-identidade">
+        <div class="portal-vidro">
+            <div class="circulo-foto" onclick="alert('Funcionalidade de Foto em Breve no OIO!')">👤</div>
+            <input id="nome-user" type="text" placeholder="Seu Nome OIO..." value="Michel Detilli">
+            <button id="btn-entrar" onclick="entrarOIO()">ENTRAR NO PORTAL OIO</button>
+            <p style="color: gray; font-size: 10px; margin-top: 15px;">Módulo de Identidade • DNA Vibe</p>
+        </div>
+    </div>
+
+    <div id="camada-vibe">
+        <div id="janela-mensagens">
+            <div id="lista-msgs"></div>
+            <div class="area-escrita">
+                <input id="msg-txt" type="text" placeholder="Escreva a vibe...">
+                <button onclick="enviar()" style="background:#00f2fe; border:none; border-radius:12px; padding:12px 25px; font-weight:bold; font-size:20px; color:black;">➔</button>
+            </div>
+        </div>
+        
+        <div class="menu-inferior">
+            <button class="btn-mini" onclick="abrirTelefone()">📞<br>LIGAR</button>
+            <button class="btn-mini" onclick="location.reload()">📷<br>CÂMERA</button>
+            <button class="btn-mini" onclick="window.open('https://youtube.com')">📺<br>YOUTUBE</button>
+        </div>
+        <p id="identidade-topo" style="color: #00f2fe; font-size: 12px; font-weight: bold; margin-top: 5px; text-align: center;"></p>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = { databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let meuNome = localStorage.getItem("oio_user") || "Michel Detilli";
+        document.getElementById('nome-user').value = meuNome;
+        document.getElementById('identidade-topo').innerText = "ONLINE: " + meuNome;
+
+        function entrarOIO() {
+            // Autenticação e Folheio de Camada
+            meuNome = document.getElementById('nome-user').value || "Michel Detilli";
+            localStorage.setItem("oio_user", meuNome);
+            document.getElementById('camada-identidade').style.display = 'none';
+            document.getElementById('camada-vibe').style.display = 'flex';
+            
+            // Ativa Câmera de Fundo (Verifique permissão no Chrome)
+            navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}}).then(s => {
+                document.getElementById('camera-fundo').srcObject = s;
+            }).catch(e => console.log("Câmera bloqueada"));
+
+            // Escuta Mensagens do Firebase Original que Funciona
+            db.ref('chat_geral').limitToLast(15).on('value', (s) => {
+                const lista = document.getElementById('lista-msgs');
+                lista.innerHTML = "";
+                s.forEach(child => {
+                    lista.innerHTML += `<div class="balao"><b>${child.val().autor}:</b><br>${child.val().texto}</div>`;
+                });
+                document.getElementById('somMsg').play();
+                lista.scrollTop = lista.scrollHeight;
+            });
+        }
+
+        function enviar() {
+            const input = document.getElementById('msg-txt');
+            if(input.value) {
+                // Envia para o Firebase Original que Funciona
+                db.ref('chat_geral').push({ texto: input.value, autor: meuNome, data: Date.now() });
+                input.value = "";
+            }
+        }
+
+        function abrirTelefone() {
+            let num = prompt("Número para ligar:");
+            if(num) window.open('tel:' + num);
+        }
+    </script>
+</body>
+</html>
