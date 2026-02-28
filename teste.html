@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OIO ONE CORE - Michel</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; background: #000; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        
+        /* Câmera com Foco na Identidade */
+        #camera { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; filter: brightness(0.4) blur(3px); }
+
+        /* Gaveta de Vidro Real (Máximo Processamento) */
+        #interface-oio { 
+            position: absolute; bottom: 35px; left: 5%; width: 90%; height: 155px; 
+            background: rgba(255, 255, 255, 0.05); border: 1.5px solid rgba(255,255,255,0.25);
+            backdrop-filter: blur(60px) saturate(210%); -webkit-backdrop-filter: blur(60px) saturate(210%);
+            border-radius: 40px; z-index: 10; display: flex; flex-direction: column; align-items: center;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+        }
+
+        .menu-apps { display: flex; gap: 18px; padding: 25px 15px; overflow-x: auto; width: 100%; scrollbar-width: none; }
+        .menu-apps::-webkit-scrollbar { display: none; }
+
+        /* Ícones com Profundidade */
+        .app-icon { 
+            min-width: 72px; height: 72px; background: rgba(255,255,255,0.1); 
+            border-radius: 24px; display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 10px; flex-direction: column; border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3); transition: 0.2s;
+        }
+        .app-icon:active { transform: scale(0.9); background: rgba(0, 242, 254, 0.3); }
+
+        /* Estrela Inteligente Pulsante */
+        #estrela-oio { 
+            position: fixed; bottom: 210px; right: 30px; width: 62px; height: 62px; 
+            background: radial-gradient(circle at 30% 30%, #00f2fe, #4facfe); border-radius: 50%; 
+            z-index: 30; display: flex; align-items: center; justify-content: center; font-size: 26px;
+            box-shadow: 0 0 45px rgba(0, 242, 254, 0.7); animation: flutuar 3s infinite ease-in-out;
+        }
+        @keyframes flutuar { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-15px); } }
+    </style>
+</head>
+<body>
+    <video id="camera" autoplay playsinline></video>
+    <div id="estrela-oio">✨</div>
+    <div id="interface-oio">
+        <div style="width: 45px; height: 5px; background: rgba(255,255,255,0.3); margin-top: 15px; border-radius: 20px;"></div>
+        <div class="menu-apps">
+            <div class="app-icon" onclick="location.href='https://google.com'">🌐<br>Google</div>
+            <div class="app-icon" onclick="location.href='https://youtube.com'">📺<br>YouTube</div>
+            <div class="app-icon" onclick="alert('VIBE Conectado ao Firebase')">📩<br>Mensagens</div>
+            <div class="app-icon" onclick="alert('OIO IA: Analisando DNA Michel')">🤖<br>OIO IA</div>
+            <div class="app-icon" onclick="location.href='https://maps.google.com'">🗺️<br>Maps</div>
+        </div>
+        <p style="color: #00f2fe; font-size: 10px; font-weight: bold; letter-spacing: 2px; margin-top: 5px;">OIO ONE • MICHEL DETILLI</p>
+    </div>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = { databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(firebaseConfig);
+        const v = document.getElementById('camera');
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then(s => v.srcObject = s);
+    </script>
+</body>
+</html>
+
