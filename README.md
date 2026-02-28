@@ -47,7 +47,7 @@
         <div class="mini-tela" style="opacity: 0.5;"></div>
     </div>
 
-    <div id="estrela-oio" onclick="sentirOIO()">✨</div>
+<div class="app-icon" onclick="alert('Iniciando OIO Mensagens...')">📩<br>Mensagens</div>
 
     <div id="interface-oio">
         <div style="width: 40px; height: 5px; background: rgba(255,255,255,0.5); margin: 10px; border-radius: 10px;"></div>
