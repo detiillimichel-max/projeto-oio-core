@@ -1,41 +1,85 @@
-<script>
-    const firebaseConfig = { databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // PERGUNTA O NOME ASSIM QUE ABRE
-    let meuNome = localStorage.getItem("usuario_oio") || prompt("Qual é o seu nome?");
-    if(!meuNome) meuNome = "Visitante";
-    localStorage.setItem("usuario_oio", meuNome);
-
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then(s => document.getElementById('camera').srcObject = s);
-
-    function abrirVibe() {
-        document.getElementById('janela-chat').style.display = 'flex';
-        db.ref('chat_geral').limitToLast(15).on('value', (snapshot) => {
-            const lista = document.getElementById('lista-msgs');
-            lista.innerHTML = "";
-            snapshot.forEach(item => {
-                const dado = item.val();
-                // COLOCA LADOS DIFERENTES PARA VOCÊ E PARA OS OUTROS
-                const alinhamento = dado.autor === meuNome ? "text-align:right; color:#00f2fe;" : "text-align:left; color:#fff;";
-                lista.innerHTML += `<div class="balao" style="${alinhamento}"><b>${dado.autor}:</b><br>${dado.texto}</div>`;
-            });
-            document.getElementById('somMsg').play();
-            lista.scrollTop = lista.scrollHeight;
-        });
-    }
-
-    function enviarVibeReal() {
-        const input = document.getElementById('campo-texto');
-        if(input.value) {
-            // AGORA ENVIA COM O NOME QUE A PESSOA DIGITOU
-            db.ref('chat_geral').push({ 
-                texto: input.value, 
-                autor: meuNome, 
-                data: Date.now() 
-            });
-            input.value = "";
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OIO ONE CORE</title>
+    <style>
+        body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
+        #camera { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; filter: brightness(0.3) blur(2px); }
+        
+        /* CHAT COM LETRAS GIGANTES PARA VOCÊ LER SEM ZOOM */
+        #vibe-chat { 
+            position: fixed; top: 5%; left: 5%; width: 90%; height: 60%; 
+            background: rgba(0,0,0,0.9); backdrop-filter: blur(20px); 
+            border-radius: 35px; z-index: 100; border: 2px solid #00f2fe; 
+            display: none; flex-direction: column; padding: 20px; 
         }
-    }
-</script>
+        #lista-msgs { flex: 1; overflow-y: auto; font-size: 22px; margin-bottom: 10px; }
+        .balao { background: rgba(0, 242, 254, 0.1); padding: 15px; border-radius: 20px; margin-bottom: 12px; border-left: 5px solid #00f2fe; }
+
+        /* GAVETA DE VIDRO OIO */
+        #interface-oio { position: absolute; bottom: 25px; left: 5%; width: 90%; height: 150px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(40px); border-radius: 45px; z-index: 10; display: flex; flex-direction: column; align-items: center; }
+        .menu-apps { display: flex; gap: 20px; padding: 25px; }
+        .app-icon { min-width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 12px; flex-direction: column; }
+    </style>
+</head>
+<body>
+    <video id="camera" autoplay playsinline></video>
+    <audio id="somMsg" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
+
+    <div id="vibe-chat">
+        <div id="lista-msgs"></div>
+        <input id="campo-texto" type="text" placeholder="Sua mensagem..." style="width:100%; padding:20px; border-radius:15px; font-size:20px; margin-bottom:10px;">
+        <button onclick="enviarVibeReal()" style="width:100%; padding:20px; background:#00f2fe; font-weight:bold; font-size:22px; border-radius:15px; border:none;">ENVIAR</button>
+        <button onclick="document.getElementById('vibe-chat').style.display='none'" style="color:gray; background:none; border:none; margin-top:10px; font-size:16px;">FECHAR</button>
+    </div>
+
+    <div id="interface-oio" onclick="abrirVibe()">
+        <div style="width: 45px; height: 5px; background: rgba(255,255,255,0.3); margin-top: 15px; border-radius: 10px;"></div>
+        <div class="menu-apps">
+            <div class="app-icon">📩<br>Mensagens</div>
+        </div>
+        <p id="nome-status" style="color: #00f2fe; font-size: 12px; font-weight: bold;"></p>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = { databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // MEMÓRIA DO PROVEDOR: SALVA O NOME NO NAVEGADOR
+        let meuNome = localStorage.getItem("oio_user") || prompt("Qual é o seu nome?");
+        if(meuNome) {
+            localStorage.setItem("oio_user", meuNome);
+            document.getElementById('nome-status').innerText = "ONLINE: " + meuNome;
+        }
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then(s => document.getElementById('camera').srcObject = s);
+
+        function abrirVibe() {
+            document.getElementById('vibe-chat').style.display = 'flex';
+            db.ref('chat_geral').limitToLast(10).on('value', (s) => {
+                const lista = document.getElementById('lista-msgs');
+                lista.innerHTML = "";
+                s.forEach(child => {
+                    lista.innerHTML += `<div class="balao"><b>${child.val().autor}:</b><br>${child.val().texto}</div>`;
+                });
+                document.getElementById('somMsg').play();
+                lista.scrollTop = lista.scrollHeight;
+            });
+        }
+
+        function enviarVibeReal() {
+            const txt = document.getElementById('campo-texto').value;
+            if(txt) {
+                db.ref('chat_geral').push({ texto: txt, autor: meuNome || "Michel", data: Date.now() });
+                document.getElementById('campo-texto').value = "";
+            }
+        }
+    </script>
+</body>
+</html>
+
