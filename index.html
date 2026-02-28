@@ -3,30 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OIO ONE - VIBE</title>
+    <title>OIO ONE CORE</title>
     <style>
         body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
-        #camera-fundo { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; filter: brightness(0.3) blur(3px); }
+        #camera-fundo { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; filter: brightness(0.3) blur(2px); }
         
-        /* JANELA DE CHAT - CORREÇÃO DE LAYOUT */
+        /* CHAT PROFISSIONAL COM LINKS CLICÁVEIS */
         #vibe-chat { 
             position: fixed; top: 5%; left: 5%; width: 90%; height: 60%; 
-            background: rgba(0,0,0,0.9); backdrop-filter: blur(25px); 
+            background: rgba(0,0,0,0.92); backdrop-filter: blur(25px); 
             border-radius: 35px; z-index: 100; border: 2px solid #00f2fe; 
-            display: none; flex-direction: column; padding: 20px;
+            display: none; flex-direction: column; padding: 25px; 
         }
-        #lista-msgs { flex: 1; overflow-y: auto; font-size: 22px; margin-bottom: 10px; }
-        .balao { background: rgba(0, 242, 254, 0.15); padding: 15px; border-radius: 20px; margin-bottom: 12px; border-left: 5px solid #00f2fe; }
+        #lista-msgs { flex: 1; overflow-y: auto; font-size: 24px; margin-bottom: 15px; }
+        .balao { background: rgba(0, 242, 254, 0.15); padding: 18px; border-radius: 20px; margin-bottom: 15px; border-left: 6px solid #00f2fe; word-wrap: break-word; }
         
-        /* ÁREA DE ESCRITA UNIFICADA (NÃO FICA EMBAIXO DO TECLADO) */
-        .area-input { display: flex; gap: 8px; margin-bottom: 5px; }
-        input { flex: 1; padding: 18px; border-radius: 15px; border: none; font-size: 20px; background: #eee; color: #000; }
-        .btn-enviar { padding: 18px; border-radius: 15px; background: #00f2fe; border: none; font-weight: bold; font-size: 18px; color: black; }
+        .area-input { display: flex; gap: 10px; margin-bottom: 5px; }
+        input { flex: 1; padding: 22px; border-radius: 20px; border: none; font-size: 22px; background: #eee; color: #000; }
+        .btn-enviar { padding: 22px 30px; border-radius: 20px; background: #00f2fe; border: none; font-weight: bold; font-size: 24px; }
 
-        /* MENU OIO ATIVO */
-        #interface-oio { position: absolute; bottom: 25px; left: 5%; width: 90%; height: 160px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(40px); border-radius: 45px; z-index: 10; display: flex; flex-direction: column; align-items: center; }
-        .menu-apps { display: flex; gap: 15px; padding: 20px; overflow-x: auto; width: 100%; justify-content: center; }
-        .app-icon { min-width: 75px; height: 75px; background: rgba(255,255,255,0.1); border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 28px; flex-direction: column; color: white; border: 1px solid rgba(255,255,255,0.1); }
+        /* MENU OIO - ERGONOMIA DINÂMICA */
+        #interface-oio { position: absolute; bottom: 25px; left: 5%; width: 90%; height: 180px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(50px); border-radius: 45px; z-index: 10; display: flex; flex-direction: column; align-items: center; }
+        .menu-apps { display: flex; gap: 15px; padding: 20px; }
+        .app-icon { min-width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 32px; flex-direction: column; color: white; border: 1px solid rgba(255,255,255,0.1); }
         .app-label { font-size: 10px; margin-top: 5px; font-weight: bold; }
     </style>
 </head>
@@ -40,18 +39,18 @@
             <input id="campo-texto" type="text" placeholder="Mensagem...">
             <button class="btn-enviar" onclick="enviarVibeReal()">➔</button>
         </div>
-        <button onclick="document.getElementById('vibe-chat').style.display='none'" style="background:none; color:gray; font-size:16px; border:none;">FECHAR</button>
+        <button onclick="document.getElementById('vibe-chat').style.display='none'" style="background:none; color:gray; font-size:18px; margin-top:10px; border:none;">FECHAR</button>
     </div>
 
     <div id="interface-oio">
-        <div style="width: 45px; height: 6px; background: rgba(255,255,255,0.3); margin-top: 15px; border-radius: 10px;"></div>
+        <div style="width: 50px; height: 6px; background: rgba(255,255,255,0.4); margin-top: 15px; border-radius: 10px;"></div>
         <div class="menu-apps">
             <div class="app-icon" onclick="abrirVibe()">📩<div class="app-label">CHAT</div></div>
-            <div class="app-icon" onclick="window.open('tel:011999999999')">📞<div class="app-label">LIGAR</div></div>
+            <div class="app-icon" onclick="abrirAgenda()">📞<div class="app-label">LIGAR</div></div>
             <div class="app-icon" onclick="location.reload()">📷<div class="app-label">CÂMERA</div></div>
             <div class="app-icon" onclick="window.open('https://youtube.com')">📺<div class="app-label">YT</div></div>
         </div>
-        <p id="identidade-status" style="color: #00f2fe; font-size: 13px; font-weight: bold; margin-top: 5px;"></p>
+        <p id="identidade-status" style="color: #00f2fe; font-size: 14px; font-weight: bold; margin-top: 5px;"></p>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -67,7 +66,15 @@
             document.getElementById('identidade-status').innerText = "ONLINE: " + meuNome;
         }
 
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then(s => document.getElementById('camera-fundo').srcObject = s);
+        // TENTA ATIVAR CÂMERA AUTOMATICAMENTE
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
+            .then(s => document.getElementById('camera-fundo').srcObject = s)
+            .catch(e => console.log("Câmera travada"));
+
+        function formatarLink(texto) {
+            const regex = /(https?:\/\/[^\s]+)/g;
+            return texto.replace(regex, (url) => `<a href="${url}" target="_blank" style="color:#00f2fe; text-decoration:underline;">${url}</a>`);
+        }
 
         function abrirVibe() {
             document.getElementById('vibe-chat').style.display = 'flex';
@@ -76,8 +83,8 @@
                 lista.innerHTML = "";
                 snapshot.forEach(item => {
                     const d = item.val();
-                    const alinhamento = d.autor === meuNome ? "border-left:none; border-right:5px solid #00f2fe; text-align:right; margin-left:auto;" : "";
-                    lista.innerHTML += `<div class="balao" style="${alinhamento}"><b>${d.autor}:</b><br>${d.texto}</div>`;
+                    const alinhamento = d.autor === meuNome ? "border-left:none; border-right:6px solid #00f2fe; text-align:right; margin-left:auto;" : "";
+                    lista.innerHTML += `<div class="balao" style="${alinhamento}"><b>${d.autor}:</b><br>${formatarLink(d.texto)}</div>`;
                 });
                 document.getElementById('somMsg').play();
                 lista.scrollTop = lista.scrollHeight;
@@ -88,8 +95,18 @@
             const input = document.getElementById('campo-texto');
             if(input.value) {
                 db.ref('chat_geral').push({ texto: input.value, autor: meuNome, data: Date.now() });
-                input.value = ""; // LIMPA O CAMPO NA HORA
+                input.value = "";
                 input.focus();
+            }
+        }
+
+        async function abrirAgenda() {
+            try {
+                const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
+                if (contacts.length > 0) window.open('tel:' + contacts[0].tel[0]);
+            } catch (e) {
+                let num = prompt("Digite o número para ligar:");
+                if(num) window.open('tel:' + num);
             }
         }
     </script>
