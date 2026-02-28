@@ -3,54 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OIO ONE CORE</title>
+    <title>OIO ONE - MICHEL</title>
     <style>
         body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; color: white; }
-        #camera-fundo { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; filter: brightness(0.3) blur(2px); }
+        #camera-fundo { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; filter: brightness(0.4); }
         
-        /* CHAT PROFISSIONAL COM LINKS CLICÁVEIS */
-        #vibe-chat { 
-            position: fixed; top: 5%; left: 5%; width: 90%; height: 60%; 
-            background: rgba(0,0,0,0.92); backdrop-filter: blur(25px); 
-            border-radius: 35px; z-index: 100; border: 2px solid #00f2fe; 
-            display: none; flex-direction: column; padding: 25px; 
+        /* CAMADA 1: IDENTIDADE (CAPA DO LIVRO) */
+        #camada-identidade { 
+            position: fixed; inset: 0; background: #000; z-index: 1000; 
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
-        #lista-msgs { flex: 1; overflow-y: auto; font-size: 24px; margin-bottom: 15px; }
-        .balao { background: rgba(0, 242, 254, 0.15); padding: 18px; border-radius: 20px; margin-bottom: 15px; border-left: 6px solid #00f2fe; word-wrap: break-word; }
-        
-        .area-input { display: flex; gap: 10px; margin-bottom: 5px; }
-        input { flex: 1; padding: 22px; border-radius: 20px; border: none; font-size: 22px; background: #eee; color: #000; }
-        .btn-enviar { padding: 22px 30px; border-radius: 20px; background: #00f2fe; border: none; font-weight: bold; font-size: 24px; }
+        .circulo-foto { width: 150px; height: 150px; border: 3px solid #00f2fe; border-radius: 50%; margin-bottom: 20px; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center; font-size: 50px; }
 
-        /* MENU OIO - ERGONOMIA DINÂMICA */
-        #interface-oio { position: absolute; bottom: 25px; left: 5%; width: 90%; height: 180px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(50px); border-radius: 45px; z-index: 10; display: flex; flex-direction: column; align-items: center; }
-        .menu-apps { display: flex; gap: 15px; padding: 20px; }
-        .app-icon { min-width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 32px; flex-direction: column; color: white; border: 1px solid rgba(255,255,255,0.1); }
-        .app-label { font-size: 10px; margin-top: 5px; font-weight: bold; }
+        /* CAMADA 2: INTERAÇÃO (PÁGINA DO CHAT) */
+        #camada-vibe { position: fixed; inset: 0; z-index: 10; display: none; flex-direction: column; }
+        #janela-mensagens { flex: 1; margin: 20px; background: rgba(0,0,0,0.7); backdrop-filter: blur(15px); border-radius: 30px; border: 1px solid rgba(0,242,254,0.3); display: flex; flex-direction: column; padding: 15px; }
+        #lista-msgs { flex: 1; overflow-y: auto; font-size: 22px; }
+        .balao { background: rgba(0, 242, 254, 0.1); padding: 12px; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid #00f2fe; }
+
+        /* RODAPÉ COM ÍCONES PEQUENOS */
+        .area-escrita { display: flex; gap: 8px; padding: 10px; }
+        input { flex: 1; padding: 15px; border-radius: 12px; border: none; font-size: 18px; }
+        .menu-inferior { display: flex; justify-content: space-around; padding: 15px; background: rgba(255,255,255,0.1); backdrop-filter: blur(20px); border-radius: 30px 30px 0 0; }
+        .btn-mini { font-size: 24px; background: none; border: none; color: white; display: flex; flex-direction: column; align-items: center; font-size: 10px; }
     </style>
 </head>
 <body>
     <video id="camera-fundo" autoplay playsinline></video>
-    <audio id="somMsg" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
 
-    <div id="vibe-chat">
-        <div id="lista-msgs"></div>
-        <div class="area-input">
-            <input id="campo-texto" type="text" placeholder="Mensagem...">
-            <button class="btn-enviar" onclick="enviarVibeReal()">➔</button>
-        </div>
-        <button onclick="document.getElementById('vibe-chat').style.display='none'" style="background:none; color:gray; font-size:18px; margin-top:10px; border:none;">FECHAR</button>
+    <div id="camada-identidade">
+        <div class="circulo-foto" onclick="document.getElementById('input-foto').click()">👤</div>
+        <input type="file" id="input-foto" hidden>
+        <input id="nome-user" type="text" placeholder="Seu Nome..." style="width: 70%; padding: 15px; border-radius: 10px; text-align: center; font-size: 20px;">
+        <button onclick="entrarOIO()" style="margin-top: 20px; padding: 15px 40px; border-radius: 10px; background: #00f2fe; font-weight: bold;">ENTRAR NO OIO</button>
     </div>
 
-    <div id="interface-oio">
-        <div style="width: 50px; height: 6px; background: rgba(255,255,255,0.4); margin-top: 15px; border-radius: 10px;"></div>
-        <div class="menu-apps">
-            <div class="app-icon" onclick="abrirVibe()">📩<div class="app-label">CHAT</div></div>
-            <div class="app-icon" onclick="abrirAgenda()">📞<div class="app-label">LIGAR</div></div>
-            <div class="app-icon" onclick="location.reload()">📷<div class="app-label">CÂMERA</div></div>
-            <div class="app-icon" onclick="window.open('https://youtube.com')">📺<div class="app-label">YT</div></div>
+    <div id="camada-vibe">
+        <div id="janela-mensagens">
+            <div id="lista-msgs"></div>
+            <div class="area-escrita">
+                <input id="msg-txt" type="text" placeholder="Vibe...">
+                <button onclick="enviar()" style="background:#00f2fe; border:none; border-radius:10px; padding:10px 20px; font-weight:bold;">➔</button>
+            </div>
         </div>
-        <p id="identidade-status" style="color: #00f2fe; font-size: 14px; font-weight: bold; margin-top: 5px;"></p>
+        
+        <div class="menu-inferior">
+            <button class="btn-mini" onclick="abrirTelefone()">📞<br>LIGAR</button>
+            <button class="btn-mini" onclick="location.reload()">📷<br>CÂMERA</button>
+            <button class="btn-mini" onclick="window.open('https://youtube.com')">📺<br>YOUTUBE</button>
+        </div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -60,54 +61,42 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        let meuNome = localStorage.getItem("oio_user") || prompt("Qual é o seu nome?");
-        if(meuNome) {
+        let meuNome = localStorage.getItem("oio_user");
+        if(meuNome) { document.getElementById('nome-user').value = meuNome; }
+
+        function entrarOIO() {
+            meuNome = document.getElementById('nome-user').value || "Michel";
             localStorage.setItem("oio_user", meuNome);
-            document.getElementById('identidade-status').innerText = "ONLINE: " + meuNome;
-        }
+            document.getElementById('camada-identidade').style.display = 'none';
+            document.getElementById('camada-vibe').style.display = 'flex';
+            
+            // ATIVA CÂMERA AO ENTRAR
+            navigator.mediaDevices.getUserMedia({video:{facingMode:"user"}}).then(s => {
+                document.getElementById('camera-fundo').srcObject = s;
+            });
 
-        // TENTA ATIVAR CÂMERA AUTOMATICAMENTE
-        navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-            .then(s => document.getElementById('camera-fundo').srcObject = s)
-            .catch(e => console.log("Câmera travada"));
-
-        function formatarLink(texto) {
-            const regex = /(https?:\/\/[^\s]+)/g;
-            return texto.replace(regex, (url) => `<a href="${url}" target="_blank" style="color:#00f2fe; text-decoration:underline;">${url}</a>`);
-        }
-
-        function abrirVibe() {
-            document.getElementById('vibe-chat').style.display = 'flex';
-            db.ref('chat_geral').limitToLast(15).on('value', (snapshot) => {
+            // ESCUTA MENSAGENS
+            db.ref('chat_geral').limitToLast(15).on('value', (s) => {
                 const lista = document.getElementById('lista-msgs');
                 lista.innerHTML = "";
-                snapshot.forEach(item => {
-                    const d = item.val();
-                    const alinhamento = d.autor === meuNome ? "border-left:none; border-right:6px solid #00f2fe; text-align:right; margin-left:auto;" : "";
-                    lista.innerHTML += `<div class="balao" style="${alinhamento}"><b>${d.autor}:</b><br>${formatarLink(d.texto)}</div>`;
+                s.forEach(child => {
+                    lista.innerHTML += `<div class="balao"><b>${child.val().autor}:</b><br>${child.val().texto}</div>`;
                 });
-                document.getElementById('somMsg').play();
                 lista.scrollTop = lista.scrollHeight;
             });
         }
 
-        function enviarVibeReal() {
-            const input = document.getElementById('campo-texto');
+        function enviar() {
+            const input = document.getElementById('msg-txt');
             if(input.value) {
                 db.ref('chat_geral').push({ texto: input.value, autor: meuNome, data: Date.now() });
                 input.value = "";
-                input.focus();
             }
         }
 
-        async function abrirAgenda() {
-            try {
-                const contacts = await navigator.contacts.select(['name', 'tel'], { multiple: false });
-                if (contacts.length > 0) window.open('tel:' + contacts[0].tel[0]);
-            } catch (e) {
-                let num = prompt("Digite o número para ligar:");
-                if(num) window.open('tel:' + num);
-            }
+        function abrirTelefone() {
+            let num = prompt("Número para ligar:");
+            if(num) window.open('tel:' + num);
         }
     </script>
 </body>
