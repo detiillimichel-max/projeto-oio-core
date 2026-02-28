@@ -6,63 +6,65 @@
     <title>OIO ONE - Michel</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', sans-serif; }
-        /* Camada de Identidade: Michel é o Centro */
-        #camera { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; filter: brightness(0.8); }
-        
-        /* Camada de Interação: Gaveta de Vidro (30%) */
+        #camera { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; filter: brightness(0.7); }
         #interface-oio { 
             position: absolute; bottom: 0; width: 100%; height: 35%; 
             background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(20px);
-            border-radius: 30px 30px 0 0; z-index: 10; transition: 0.5s;
-            border-top: 1px solid rgba(255,255,255,0.2); display: flex; flex-direction: column; align-items: center;
+            border-radius: 30px 30px 0 0; z-index: 10; border-top: 1px solid rgba(255,255,255,0.2);
+            display: flex; flex-direction: column; align-items: center;
         }
-
-        /* Ergonomia Dinâmica: Menu de Apps */
         .menu-apps { display: flex; gap: 20px; padding: 25px; overflow-x: auto; width: 90%; }
         .app-icon { 
             min-width: 65px; height: 65px; background: rgba(255,255,255,0.15); 
             border-radius: 18px; display: flex; align-items: center; justify-content: center;
             color: white; font-size: 11px; flex-direction: column; cursor: pointer;
-            border: 1px solid rgba(255,255,255,0.1);
         }
-
-        /* Camada Sensorial: Estrela IA */
         #estrela-oio { 
             position: fixed; bottom: 40%; right: 8%; width: 55px; height: 55px; 
             background: linear-gradient(45deg, #00f2fe, #4facfe); border-radius: 50%; 
-            z-index: 30; display: flex; align-items: center; justify-content: center; 
-            box-shadow: 0 0 25px rgba(79, 172, 254, 0.6); cursor: pointer; font-size: 24px;
+            z-index: 30; display: flex; align-items: center; justify-content: center; font-size: 24px;
         }
     </style>
 </head>
 <body>
-
     <video id="camera" autoplay playsinline></video>
-
     <div id="estrela-oio" onclick="sentirOIO()">✨</div>
-
     <div id="interface-oio">
         <div style="width: 45px; height: 4px; background: rgba(255,255,255,0.3); margin: 12px; border-radius: 10px;"></div>
         <div class="menu-apps">
             <div class="app-icon" onclick="window.location.href='https://google.com'">🌐<br>Google</div>
             <div class="app-icon" onclick="window.location.href='https://youtube.com'">📺<br>YouTube</div>
-            <div class="app-icon">📩<br>Mensagens</div>
-            <div class="app-icon" onclick="alert('Iniciando OIO Mensagens...')">📩<br>Mensagens</div>
+            <div class="app-icon" onclick="abrirChat()">📩<br>Mensagens</div>
+            <div class="app-icon" onclick="alert('OIO IA: Em breve...')">🤖<br>OIO IA</div>
         </div>
-        <p style="color: rgba(255,255,255,0.6); font-size: 12px; margin-top: 5px;">OIO ONE • Autoria Michel Detilli</p>
+        <p style="color: rgba(255,255,255,0.6); font-size: 12px;">OIO ONE • Autoria Michel Detilli</p>
     </div>
 
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
     <script>
-        // Ativa Identidade (Câmera Real)
+        // Configuração Michel (Firebase vibe-app-bbba2)
+        const firebaseConfig = { databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Identidade Ativa
         const v = document.getElementById('camera');
         navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-            .then(s => v.srcObject = s)
-            .catch(e => console.log("Câmera pendente"));
+            .then(s => v.srcObject = s).catch(e => console.log("Câmera pendente"));
 
-        // Camada Sensorial
         function sentirOIO() {
             if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
             alert("OIO ONE: Identidade Michel Confirmada.");
+        }
+
+        function abrirChat() {
+            const msg = prompt("Digite sua memória para o OIO:");
+            if(msg) {
+                db.ref('memorias').push({ texto: msg, autor: "Michel", data: Date.now() });
+                alert("Memória gravada com sucesso no Firebase!");
+            }
         }
     </script>
 </body>
