@@ -1,193 +1,56 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>OIO ONE - Portal Oficial</title>
-
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-<style>
-body{
-    margin:0;
-    background: radial-gradient(circle at center,#001219 0%,#000 100%);
-    color:white;
-    font-family:Segoe UI, sans-serif;
-    display:flex;
-    flex-direction:column;
-    height:100vh;
-    overflow:hidden;
-}
-
-#caixa-msg{
-    flex:1;
-    overflow-y:auto;
-    padding:15px;
-    display:flex;
-    flex-direction:column;
-    gap:10px;
-}
-
-.balao{
-    background:rgba(0,242,254,0.08);
-    padding:10px 14px;
-    border-radius:15px;
-    max-width:85%;
-    border-left:3px solid #00f2fe;
-}
-
-.minha-msg{
-    align-self:flex-end;
-    border-left:none;
-    border-right:3px solid #fff;
-    background:rgba(255,255,255,0.1);
-}
-
-small{
-    display:block;
-    font-size:10px;
-    opacity:0.5;
-    margin-top:3px;
-    text-align:right;
-}
-
-.controles{
-    display:flex;
-    padding:10px;
-    background:rgba(0,0,0,0.7);
-    gap:10px;
-}
-
-input{
-    flex:1;
-    padding:12px;
-    border-radius:20px;
-    border:1px solid #00f2fe44;
-    background:#000;
-    color:white;
-    outline:none;
-}
-
-button{
-    width:50px;
-    border:none;
-    border-radius:50%;
-    background:#00f2fe;
-    font-weight:bold;
-    cursor:pointer;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OIO ONE - Portal</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <style>
+        body { margin: 0; background: radial-gradient(circle, #001219, #000); color: white; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        #caixa-msg { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
+        .balao { background: rgba(0, 242, 254, 0.1); padding: 10px 15px; border-radius: 15px; border-left: 3px solid #00f2fe; align-self: flex-start; max-width: 85%; }
+        .minha-msg { align-self: flex-end; border-left: none; border-right: 3px solid #fff; background: rgba(255,255,255,0.1); }
+        .controles { padding: 15px; background: #000; display: flex; gap: 10px; border-top: 1px solid #333; }
+        input { flex: 1; padding: 12px; border-radius: 20px; border: none; background: #222; color: #fff; outline: none; font-size: 16px; }
+        button { width: 50px; height: 50px; border-radius: 50%; border: none; background: #00f2fe; color: #000; font-weight: bold; }
+    </style>
 </head>
-
 <body>
-
-<div id="caixa-msg"></div>
-
-<div class="controles">
-    <input id="minha-vibe" placeholder="Escreva sua vibe..." autocomplete="off">
-    <button onclick="enviarVibe()">🚀</button>
-</div>
-
-<audio id="somBip" src="https://www.soundjay.com/buttons/sounds/button-50.mp3"></audio>
-
-<script>
-
-// 🔐 CONFIG
-const firebaseConfig = {
-    databaseURL: "https://vibe-app-bbba7-default-rtdb.firebaseio.com/"
-};
-firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
-
-// 👤 IDENTIDADE PERSISTENTE
-let meuNome = localStorage.getItem("oio_nome");
-if(!meuNome){
-    meuNome = prompt("Seu nome no OIO ONE:") || "Michel";
-    localStorage.setItem("oio_nome", meuNome);
-}
-
-// ⚙️ CONTROLE
-let carregamentoInicial = true;
-let podeEnviar = true;
-
-db.ref("chat_geral").once("value", () => {
-    carregamentoInicial = false;
-});
-
-// 📡 MOTOR REALTIME
-db.ref("chat_geral").limitToLast(30).on("child_added", (snap) => {
-
-    const msg = snap.val();
-    const caixa = document.getElementById("caixa-msg");
-    const classeMinha = msg.autor === meuNome ? "minha-msg" : "";
-
-    const div = document.createElement("div");
-    div.className = "balao " + classeMinha;
-
-    const nome = document.createElement("strong");
-    nome.textContent = msg.autor;
-
-    const texto = document.createElement("div");
-    texto.textContent = msg.texto;
-
-    const hora = new Date(msg.data || Date.now());
-    const horario = document.createElement("small");
-    horario.textContent = hora.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
-
-    div.appendChild(nome);
-    div.appendChild(texto);
-    div.appendChild(horario);
-    caixa.appendChild(div);
-
-    caixa.scrollTop = caixa.scrollHeight;
-
-    // 🔊 Som + Vibração
-    if(!carregamentoInicial && msg.autor !== meuNome){
-        document.getElementById("somBip").play().catch(()=>{});
-        if(navigator.vibrate) navigator.vibrate(150);
-    }
-
-});
-
-// 🚀 ENVIAR
-function enviarVibe(){
-
-    if(!podeEnviar) return;
-
-    const input = document.getElementById("minha-vibe");
-    const texto = input.value.trim();
-
-    if(!texto) return;
-
-    if(texto.length > 200){
-        alert("Vibe muito longa 🚀");
-        return;
-    }
-
-    podeEnviar = false;
-
-    db.ref("chat_geral").push({
-        autor: meuNome,
-        texto: texto,
-        data: Date.now()
-    });
-
-    input.value = "";
-
-    setTimeout(()=>{
-        podeEnviar = true;
-    },500);
-}
-
-// ⌨️ ENTER
-document.getElementById("minha-vibe").addEventListener("keypress", function(e){
-    if(e.key === "Enter"){
-        enviarVibe();
-    }
-});
-
-</script>
-
+    <div id="caixa-msg"></div>
+    <div class="controles">
+        <input id="vibe-txt" type="text" placeholder="Sua vibe..." autocomplete="off">
+        <button onclick="enviar()">🚀</button>
+    </div>
+    <audio id="somBip" src="https://www.soundjay.com/buttons/sounds/button-50.mp3"></audio>
+    <script>
+        const config = { databaseURL: "https://vibe-app-bbba7-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(config);
+        const db = firebase.database();
+        let meuNome = localStorage.getItem("oio_nome") || prompt("Nome no Portal:") || "Michel";
+        localStorage.setItem("oio_nome", meuNome);
+        let carregando = true;
+        db.ref("chat_geral").once("value", () => { carregando = false; });
+        db.ref("chat_geral").limitToLast(20).on("child_added", (snap) => {
+            const msg = snap.val();
+            const caixa = document.getElementById('caixa-msg');
+            const div = document.createElement("div");
+            div.className = "balao " + (msg.autor === meuNome ? "minha-msg" : "");
+            div.innerHTML = `<strong>${msg.autor}</strong><br>${msg.texto}`;
+            caixa.appendChild(div);
+            caixa.scrollTop = caixa.scrollHeight;
+            if (!carregando && msg.autor !== meuNome) {
+                document.getElementById('somBip').play().catch(() => {});
+                if (navigator.vibrate) navigator.vibrate(100);
+            }
+        });
+        function enviar() {
+            const input = document.getElementById('vibe-txt');
+            if(input.value.trim()) {
+                db.ref("chat_geral").push({ autor: meuNome, texto: input.value, data: Date.now() });
+                input.value = "";
+            }
+        }
+    </script>
 </body>
 </html>
