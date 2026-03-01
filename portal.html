@@ -3,26 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OIO ONE - SOM E TXT</title>
+    <title>OIO ONE - COMPLETO</title>
     <style>
-        body { margin: 0; background: #000; font-family: sans-serif; color: white; overflow: hidden; }
-        /* Janela principal simples para não travar */
-        #caixa-oio { position: fixed; inset: 10px; border: 1px solid #00f2fe; border-radius: 25px; display: flex; flex-direction: column; padding: 15px; background: #000; }
-        #lista-msgs { flex: 1; overflow-y: auto; font-size: 22px; }
-        .balao { background: rgba(0, 242, 254, 0.1); padding: 15px; border-radius: 15px; margin-bottom: 10px; border-left: 5px solid #00f2fe; }
-        .controles { display: flex; gap: 8px; padding-top: 10px; }
+        body { margin: 0; background: #000 url('https://img.freepik.com/fotos-gratis/fundo-da-galaxia-com-nebulosa-e-estrelas_23-2150826640.jpg') center/cover; font-family: sans-serif; color: white; overflow: hidden; }
+        #camada-identidade { position: fixed; inset: 0; z-index: 100; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(0,0,0,0.6); backdrop-filter: blur(10px); }
+        #camada-chat { position: fixed; inset: 10px; z-index: 10; display: none; flex-direction: column; background: rgba(0,0,0,0.8); border: 2px solid #00f2fe; border-radius: 30px; padding: 15px; }
+        #lista { flex: 1; overflow-y: auto; font-size: 22px; }
+        .balao { background: rgba(0,242,254,0.1); padding: 15px; border-radius: 15px; margin-bottom: 10px; border-left: 5px solid #00f2fe; }
+        .btn-entrar { padding: 20px 40px; border-radius: 15px; background: #00f2fe; border: none; font-weight: bold; font-size: 24px; color: black; }
+        .area-input { display: flex; gap: 8px; margin-top: 10px; }
         input { flex: 1; padding: 18px; border-radius: 12px; border: none; font-size: 18px; }
-        button { padding: 18px 25px; border-radius: 12px; background: #00f2fe; border: none; font-weight: bold; font-size: 20px; }
     </style>
 </head>
 <body>
-    <audio id="somVibe" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
+    <audio id="bip" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
 
-    <div id="caixa-oio">
-        <div id="lista-msgs"></div>
-        <div class="controles">
-            <input id="campo-txt" type="text" placeholder="Escreva...">
-            <button onclick="enviarVibe()">➔</button>
+    <div id="camada-identidade">
+        <div style="width:120px; height:120px; border-radius:50%; border:3px solid #00f2fe; margin-bottom:20px; background: #111; display:flex; align-items:center; justify-content:center; font-size:50px;">👤</div>
+        <h2>Michel Detilli</h2>
+        <button class="btn-entrar" onclick="abrirChat()">ENTRAR NO OIO</button>
+    </div>
+
+    <div id="camada-chat">
+        <div id="lista"></div>
+        <div class="area-input">
+            <input id="txt" type="text" placeholder="Escreva...">
+            <button onclick="enviar()" style="background:#00f2fe; border:none; border-radius:10px; padding:10px 20px; font-weight:bold;">➔</button>
         </div>
         <p style="text-align:center; font-size:12px; color:#00f2fe; margin-top:10px;">ONLINE: Michel Detilli</p>
     </div>
@@ -30,32 +36,33 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <script>
-        const firebaseConfig = { databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/" };
-        firebase.initializeApp(firebaseConfig);
+        const config = { databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(config);
         const db = firebase.database();
 
-        function enviarVibe() {
-            const campo = document.getElementById('campo-txt');
-            if(campo.value) {
-                // Toca o som de envio (Camada Sensorial)
-                document.getElementById('somVibe').play();
-                db.ref('chat_geral').push({ texto: campo.value, autor: "Michel Detilli", data: Date.now() });
-                campo.value = "";
-            }
+        function abrirChat() {
+            document.getElementById('camada-identidade').style.display = 'none';
+            document.getElementById('camada-chat').style.display = 'flex';
+            
+            db.ref('chat_geral').limitToLast(10).on('value', (s) => {
+                const l = document.getElementById('lista');
+                l.innerHTML = "";
+                s.forEach(c => {
+                    l.innerHTML += `<div class="balao"><b>${c.val().autor}:</b><br>${c.val().texto}</div>`;
+                });
+                document.getElementById('bip').play();
+                l.scrollTop = l.scrollHeight;
+            });
         }
 
-        // Recebe mensagens em tempo real
-        db.ref('chat_geral').limitToLast(10).on('value', (snapshot) => {
-            const lista = document.getElementById('lista-msgs');
-            lista.innerHTML = "";
-            snapshot.forEach(item => {
-                const msg = item.val();
-                lista.innerHTML += `<div class="balao"><b>${msg.autor}:</b><br>${msg.texto}</div>`;
-            });
-            // Toca som quando chega mensagem nova
-            document.getElementById('somVibe').play();
-            lista.scrollTop = lista.scrollHeight;
-        });
+        function enviar() {
+            const i = document.getElementById('txt');
+            if(i.value) {
+                document.getElementById('bip').play();
+                db.ref('chat_geral').push({ texto: i.value, autor: "Michel Detilli", data: Date.now() });
+                i.value = "";
+            }
+        }
     </script>
 </body>
 </html>
