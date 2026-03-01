@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OIO ONE - Oficial</title>
 
 <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -21,22 +21,20 @@ button{ width:50px; height:50px; border:none; border-radius:50%; background:#00f
 </head>
 
 <body>
-
 <div id="caixa-msg"></div>
 
 <div class="controles">
-<input id="msg" placeholder="Sua vibe..." autocomplete="off">
+<input id="vibe-txt" placeholder="Sua vibe..." autocomplete="off">
 <button onclick="enviar()">➤</button>
 </div>
 
 <audio id="som" src="https://www.soundjay.com/buttons/sounds/button-50.mp3"></audio>
 
 <script>
-// SUAS CHAVES REAIS JÁ INSERIDAS AQUI
 const firebaseConfig = {
   apiKey: "AIzaSyBG3oBoBvOwySN64gR6CgCcXTo2DG-av60",
   authDomain: "vibe-app-bbba2.firebaseapp.com",
-  databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com",
+  databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/",
   projectId: "vibe-app-bbba2",
   storageBucket: "vibe-app-bbba2.firebasestorage.app",
   messagingSenderId: "329513213082",
@@ -46,7 +44,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-let meuNome = localStorage.getItem("oio_nome") || prompt("Identidade OIO ONE - Seu nome:", "Michel") || "Visitante";
+let meuNome = localStorage.getItem("oio_nome") || prompt("Nome OIO ONE:") || "Michel";
 localStorage.setItem("oio_nome", meuNome);
 
 let ultimoEnvio = 0;
@@ -64,14 +62,9 @@ db.ref("chat_geral").limitToLast(15).on("child_added", snap=>{
   let msg = snap.val();
   let div = document.createElement("div");
   div.className="balao"+(msg.autor===meuNome?" minha":"");
-
-  div.innerHTML = "<strong>"+sanitizar(msg.autor)+"</strong><br>"+
-  sanitizar(msg.texto)+
-  "<div class='hora'>"+formatarHora(msg.data || Date.now())+"</div>";
-
+  div.innerHTML = "<strong>"+sanitizar(msg.autor)+"</strong><br>"+sanitizar(msg.texto)+"<div class='hora'>"+formatarHora(msg.data || Date.now())+"</div>";
   document.getElementById("caixa-msg").appendChild(div);
   document.getElementById("caixa-msg").scrollTop=999999;
-
   if(msg.autor!==meuNome){
     document.getElementById("som").play().catch(()=>{});
     if(navigator.vibrate) navigator.vibrate(100);
@@ -79,29 +72,20 @@ db.ref("chat_geral").limitToLast(15).on("child_added", snap=>{
 });
 
 function enviar(){
-  let input=document.getElementById("msg");
+  let input=document.getElementById("vibe-txt");
   let texto=input.value.trim();
   let agora=Date.now();
-
   if(!texto) return;
-
   if(agora-ultimoEnvio < 3000){
     alert("Espere 3 segundos (anti-spam)");
     return;
   }
-
   ultimoEnvio=agora;
-
-  db.ref("chat_geral").push({
-    autor:meuNome,
-    texto:texto,
-    data:agora
-  });
-
+  db.ref("chat_geral").push({ autor:meuNome, texto:texto, data:agora });
   input.value="";
 }
 
-document.getElementById("msg").addEventListener("keydown",e=>{
+document.getElementById("vibe-txt").addEventListener("keydown",e=>{
   if(e.key==="Enter") enviar();
 });
 </script>
