@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OIO ONE - TESTE DE SOM</title>
+    <title>OIO ONE - Estável</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
@@ -11,17 +11,25 @@
         #caixa-msg { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 90px; }
         .balao { background: rgba(0, 242, 254, 0.1); padding: 12px; border-radius: 18px; border-left: 4px solid #00f2fe; max-width: 80%; }
         .minha { align-self: flex-end; border-left: none; border-right: 4px solid #fff; background: rgba(255,255,255,0.1); }
-        .controles { position: fixed; bottom: 0; width: 100%; padding: 10px; background: #111; display: flex; align-items: center; gap: 8px; box-sizing: border-box; border-top: 1px solid #333; }
+        .controles { position: fixed; bottom: 0; width: 100%; padding: 10px; background: rgba(20,20,20,0.95); backdrop-filter: blur(10px); display: flex; align-items: center; gap: 8px; box-sizing: border-box; border-top: 1px solid #333; }
+        .btn-extra { background: none; border: none; font-size: 22px; color: #00f2fe; padding: 5px; }
         input { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #222; color: #fff; font-size: 16px; outline: none; }
-        .btn-enviar { width: 50px; height: 50px; border-radius: 50%; border: none; background: #00f2fe; color: #000; font-weight: bold; font-size: 20px; }
-        #aviso-som { position: fixed; top: 0; width: 100%; background: #00f2fe; color: #000; text-align: center; padding: 5px; font-size: 12px; font-weight: bold; z-index: 200; }
+        .btn-enviar { width: 50px; height: 50px; border-radius: 50%; border: none; background: #00f2fe; color: #000; font-weight: bold; }
+        #menu-clipe { position: fixed; bottom: 80px; left: 10px; right: 10px; background: #fff; border-radius: 20px; display: none; grid-template-columns: repeat(3, 1fr); padding: 20px; gap: 15px; color: #000; z-index: 101; }
+        .item-modulo { text-align: center; font-size: 12px; cursor: pointer; }
     </style>
 </head>
 <body onclick="ativarAudio()">
-    <div id="aviso-som">Toque na tela para ATIVAR O SOM 🔊</div>
     <div id="caixa-msg"></div>
+    <div id="menu-clipe">
+        <div class="item-modulo" onclick="abrir('https://mail.google.com')">📧<br>Gmail</div>
+        <div class="item-modulo" onclick="abrir('https://youtube.com')">📺<br>YouTube</div>
+        <div class="item-modulo" onclick="abrir('https://news.google.com')">📰<br>Notícias</div>
+        <div class="item-modulo" onclick="location.href='tel:+5511978533338'">📞<br>Ligar</div>
+    </div>
     <div class="controles">
-        <input id="msg-input" placeholder="Teste o som aqui..." autocomplete="off">
+        <button class="btn-extra" onclick="toggleMenu()">📎</button>
+        <input id="msg-input" placeholder="OIO ONE Ativo..." autocomplete="off">
         <button class="btn-enviar" onclick="enviar()">➤</button>
     </div>
 
@@ -40,16 +48,22 @@
         let meuNome = localStorage.getItem("oio_nome") || prompt("Seu Nome:") || "Michel";
         localStorage.setItem("oio_nome", meuNome);
 
-        // SONS DE ALTA FORÇA
-        const somEnvio = new Audio("https://actions.google.com/sounds/v1/foley/mechanical_clog_hit.ogg");
-        const somRecebido = new Audio("https://notificationsounds.com/storage/sounds/file-sounds-1150-pristine.mp3");
-
-        function ativarAudio() {
-            somEnvio.play().then(() => somEnvio.pause());
-            somRecebido.play().then(() => somRecebido.pause());
-            document.getElementById("aviso-som").style.display = "none";
-            console.log("Sistema de Áudio OIO ONE Ativo");
+        // FUNÇÃO DE BEEP LEVE (Processamento Nativo)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        function beep(freq, duration) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            osc.start();
+            osc.stop(audioCtx.currentTime + (duration / 1000));
         }
+
+        function ativarAudio() { if(audioCtx.state === 'suspended') audioCtx.resume(); }
+        function toggleMenu() { const m = document.getElementById('menu-clipe'); m.style.display = m.style.display === 'grid' ? 'none' : 'grid'; }
+        function abrir(url) { window.open(url, '_blank'); toggleMenu(); }
 
         db.ref("chat_geral").limitToLast(10).on("child_added", snap => {
             const msg = snap.val();
@@ -60,8 +74,8 @@
             document.getElementById("caixa-msg").scrollTop = 999999;
             
             if(msg.autor !== meuNome) {
-                somRecebido.play().catch(() => {});
-                if(navigator.vibrate) navigator.vibrate([200, 100, 200]); // Camada Sensorial
+                beep(880, 150); // Beep de notificação leve [cite: 2026-02-24]
+                if(navigator.vibrate) navigator.vibrate(100);
             }
         });
 
@@ -69,11 +83,11 @@
             const input = document.getElementById("msg-input");
             if (input.value.trim()) {
                 db.ref("chat_geral").push({ autor: meuNome, texto: input.value, data: Date.now() });
-                somEnvio.play().catch(() => {});
+                beep(440, 50); // Click de envio ultraleve [cite: 2026-02-24]
                 input.value = "";
+                if(document.getElementById('menu-clipe').style.display === 'grid') toggleMenu();
             }
         }
     </script>
 </body>
 </html>
-
