@@ -3,49 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OIO ONE - VERSÃO ESTÁVEL</title>
+    <title>VIBE REAL</title>
     <style>
-        /* FUNDO DINÂMICO GALÁXIA */
-        body { 
-            margin: 0; 
-            background: #000 url('https://img.freepik.com/fotos-gratis/fundo-da-galaxia-com-nebulosa-e-estrelas_23-2150826640.jpg') center/cover fixed; 
-            font-family: sans-serif; color: white; overflow: hidden; 
-        }
-        
-        /* JANELA DE CHAT (VIDRO) */
-        #janela-chat { 
-            position: fixed; top: 5%; left: 5%; width: 90%; height: 65%; 
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); 
-            border-radius: 35px; border: 2px solid #00f2fe; 
-            display: flex; flex-direction: column; padding: 20px; z-index: 10;
-        }
-        #lista-msgs { flex: 1; overflow-y: auto; font-size: 24px; }
-        .balao { background: rgba(0, 242, 254, 0.1); padding: 15px; border-radius: 20px; margin-bottom: 12px; border-left: 5px solid #00f2fe; }
-        
-        /* ÁREA DE ENVIO */
-        input { width: 90%; padding: 20px; border-radius: 15px; border: none; font-size: 20px; margin: 10px 0; }
-        .btn-enviar { width: 100%; padding: 22px; border-radius: 20px; background: #00f2fe; border: none; font-weight: bold; font-size: 24px; color: black; }
-
-        /* RODAPÉ DE IDENTIDADE (FOTO + NOME) */
-        #identidade-footer { 
-            position: fixed; bottom: 20px; width: 100%; text-align: center; z-index: 5;
-        }
-        .foto-mini { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #00f2fe; margin-bottom: 5px; }
+        body { margin: 0; background: #000; font-family: sans-serif; color: white; }
+        #chat { position: fixed; inset: 10px; border: 2px solid #00f2fe; border-radius: 25px; display: flex; flex-direction: column; padding: 15px; background: rgba(0,0,0,0.9); }
+        #lista { flex: 1; overflow-y: auto; font-size: 22px; }
+        .balao { background: rgba(0,242,254,0.1); padding: 15px; border-radius: 15px; margin-bottom: 10px; border-left: 5px solid #00f2fe; }
+        input { width: 85%; padding: 18px; border-radius: 12px; border: none; font-size: 18px; margin-top: 10px; }
+        button { width: 100%; padding: 20px; border-radius: 12px; background: #00f2fe; border: none; font-weight: bold; font-size: 20px; margin-top: 10px; }
     </style>
 </head>
 <body>
     <audio id="bip" src="https://assets.mixkit.co/active_storage/sfx/2358/2358-preview.mp3"></audio>
-
-    <div id="janela-chat">
-        <div id="lista-msgs"></div>
-        <input id="txt" type="text" placeholder="Sua mensagem...">
-        <button class="btn-enviar" onclick="enviar()">ENVIAR</button>
-        <p style="text-align:center; color:gray; font-size:14px; margin-top:10px;">FECHAR</p>
-    </div>
-
-    <div id="identidade-footer">
-        <img src="https://via.placeholder.com/150" class="foto-mini"><br>
-        <b style="color:#00f2fe; font-size:14px;">ONLINE: Michel Detilli</b>
+    <div id="chat">
+        <div id="lista"></div>
+        <input id="msg" type="text" placeholder="Escreva...">
+        <button onclick="enviar()">ENVIAR</button>
+        <p style="text-align:center; font-size:12px; color:#00f2fe; margin-top:10px;">ONLINE: Michel Detilli</p>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
@@ -56,21 +30,21 @@
         const db = firebase.database();
 
         function enviar() {
-            const input = document.getElementById('txt');
-            if(input.value) {
-                db.ref('chat_geral').push({ texto: input.value, autor: "Michel Detilli", data: Date.now() });
-                input.value = "";
+            const i = document.getElementById('msg');
+            if(i.value) {
+                db.ref('chat_geral').push({ texto: i.value, autor: "Michel Detilli", data: Date.now() });
+                i.value = "";
             }
         }
 
         db.ref('chat_geral').limitToLast(10).on('value', (s) => {
-            const lista = document.getElementById('lista-msgs');
-            lista.innerHTML = "";
-            s.forEach(child => {
-                lista.innerHTML += `<div class="balao"><b>${child.val().autor}:</b><br>${child.val().texto}</div>`;
+            const l = document.getElementById('lista');
+            l.innerHTML = "";
+            s.forEach(c => {
+                l.innerHTML += `<div class="balao"><b>${c.val().autor}:</b><br>${c.val().texto}</div>`;
             });
-            try { document.getElementById('bip').play(); } catch(e){}
-            lista.scrollTop = lista.scrollHeight;
+            document.getElementById('bip').play();
+            l.scrollTop = l.scrollHeight;
         });
     </script>
 </body>
