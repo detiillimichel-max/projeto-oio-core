@@ -3,74 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OIO ONE - Interstellar</title>
+    <title>OIO ONE - Portal Oficial</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
-        body { margin: 0; background: #000; font-family: sans-serif; color: white; overflow: hidden; }
-        #camera-fundo { width: 100vw; height: 100vh; object-fit: cover; position: fixed; z-index: 1; filter: brightness(0.4); }
-        .camada { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; }
-        #camada-vibe { display: none; background: rgba(0,0,0,0.7); backdrop-filter: blur(15px); }
-        #lista-msgs { flex: 1; overflow-y: auto; width: 90%; padding: 20px; font-size: 18px; }
-        .balao { background: rgba(0, 242, 254, 0.1); padding: 12px; border-radius: 15px; margin-bottom: 10px; border-left: 4px solid #00f2fe; }
-        .controles { display: flex; width: 100%; padding: 15px; background: rgba(255,255,255,0.1); }
-        input { flex: 1; padding: 15px; border-radius: 12px; border: none; font-size: 16px; }
-        button { padding: 15px 25px; margin-left: 10px; border-radius: 12px; border: none; background: #00f2fe; color: #000; font-weight: bold; }
+        body { margin: 0; background: radial-gradient(circle at center, #001219 0%, #000 100%); color: white; font-family: 'Segoe UI', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        #caixa-msg { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+        .balao { background: rgba(0, 242, 254, 0.1); padding: 12px 16px; border-radius: 20px; border-left: 4px solid #00f2fe; align-self: flex-start; max-width: 80%; backdrop-filter: blur(10px); }
+        .minha-msg { align-self: flex-end; border-left: none; border-right: 4px solid #fff; background: rgba(255,255,255,0.1); }
+        .controles { padding: 15px; background: rgba(0,0,0,0.8); display: flex; gap: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+        input { flex: 1; padding: 15px; border-radius: 25px; border: none; background: #111; color: #fff; outline: none; font-size: 16px; }
+        button { width: 55px; height: 55px; border-radius: 50%; border: none; background: #00f2fe; color: #000; font-weight: bold; cursor: pointer; box-shadow: 0 0 15px #00f2fe66; }
     </style>
 </head>
 <body>
-    <video id="camera-fundo" autoplay playsinline muted loop></video>
-
-    <div id="camada-identidade" class="camada">
-        <h1 style="color: #00f2fe; text-shadow: 0 0 15px #00f2fe;">OIO ONE</h1>
-        <input id="nome-user" type="text" placeholder="Seu Nome..." style="width: 70%;">
-        <button onclick="entrarOIO()" style="margin-top: 20px; width: 80%;">ENTRAR NO PORTAL</button>
+    <div id="caixa-msg"></div>
+    <div class="controles">
+        <input id="vibe-txt" type="text" placeholder="Escreva sua vibe..." autocomplete="off">
+        <button onclick="enviar()">🚀</button>
     </div>
-
-    <div id="camada-vibe" class="camada">
-        <div id="lista-msgs"></div>
-        <div class="controles">
-            <input id="msg-txt" type="text" placeholder="Sua vibe...">
-            <button onclick="enviarVibe()">ENVIAR</button>
-        </div>
-    </div>
-
-    <audio id="somMsg" src="https://www.soundjay.com/buttons/sounds/button-50.mp3"></audio>
-
+    <audio id="somBip" src="https://www.soundjay.com/buttons/sounds/button-50.mp3"></audio>
     <script>
-        const firebaseConfig = { databaseURL: "https://vibe-app-bbba7-default-rtdb.firebaseio.com/" };
-        firebase.initializeApp(firebaseConfig);
+        // CONECTADO AO BANCO BBBA2 QUE ESTÁ A FUNCIONAR
+        const config = { databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/" };
+        firebase.initializeApp(config);
         const db = firebase.database();
 
-        function entrarOIO() {
-            const nome = document.getElementById('nome-user').value || "Michel";
-            localStorage.setItem("oio_user", nome);
-            document.getElementById('camada-identidade').style.display = 'none';
-            document.getElementById('camada-vibe').style.display = 'flex';
-            
-            // Ativa áudio após clique do usuário (regra do navegador)
-            document.getElementById('somMsg').play().then(() => {
-                document.getElementById('somMsg').pause();
-            });
+        let meuNome = localStorage.getItem("oio_nome") || prompt("Identidade OIO ONE - Seu nome:") || "Michel";
+        localStorage.setItem("oio_nome", meuNome);
 
-            // Escuta mensagens
-            db.ref("chat_geral").limitToLast(15).on("value", (snap) => {
-                const lista = document.getElementById('lista-msgs');
-                lista.innerHTML = "";
-                snap.forEach(item => {
-                    lista.innerHTML += `<div class="balao"><b>${item.val().autor}:</b> ${item.val().texto}</div>`;
-                });
-                lista.scrollTop = lista.scrollHeight;
-                document.getElementById('somMsg').play();
-            });
-        }
+        let carregando = true;
+        db.ref("chat_geral").once("value", () => { carregando = false; });
 
-        function enviarVibe() {
-            const txt = document.getElementById('msg-txt').value;
-            const autor = localStorage.getItem("oio_user");
-            if(txt) {
-                db.ref("chat_geral").push({ texto: txt, autor: autor, data: Date.now() });
-                document.getElementById('msg-txt').value = "";
+        db.ref("chat_geral").limitToLast(15).on("child_added", (snap) => {
+            const msg = snap.val();
+            const caixa = document.getElementById('caixa-msg');
+            const div = document.createElement("div");
+            div.className = "balao " + (msg.autor === meuNome ? "minha-msg" : "");
+            div.innerHTML = `<strong>${msg.autor}:</strong><br>${msg.texto}`;
+            caixa.appendChild(div);
+            caixa.scrollTop = caixa.scrollHeight;
+
+            if (!carregando && msg.autor !== meuNome) {
+                document.getElementById('somBip').play().catch(() => {});
+                if (navigator.vibrate) navigator.vibrate(200);
+            }
+        });
+
+        function enviar() {
+            const input = document.getElementById('vibe-txt');
+            if(input.value.trim()) {
+                db.ref("chat_geral").push({ autor: meuNome, texto: input.value, data: Date.now() });
+                input.value = "";
             }
         }
     </script>
