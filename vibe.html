@@ -82,5 +82,22 @@
         }
         document.getElementById("msg-input").addEventListener("keypress", e => { if(e.key === "Enter") enviar(); });
     </script>
+<div style="position: fixed; bottom: 0; left: 0; width: 100%; display: flex; justify-content: space-around; background: #000; padding: 15px 0; border-top: 1px solid #333; z-index: 9999 !important;">
+    
+    <div onclick="window.location.href='vibe.html'" style="color: white; text-align: center; cursor: pointer;">
+        <span style="font-size: 22px;">💬</span>
+        <p style="font-size: 10px; margin: 0;">Chat</p>
+    </div>
+
+    <div onclick="window.location.href='videos.html'" style="color: cyan; text-align: center; cursor: pointer;">
+        <span style="font-size: 22px;">🎬</span>
+        <p style="font-size: 10px; margin: 0;">Vídeos</p>
+    </div>
+
+    <div onclick="window.location.href='tel:+5511999999999'" style="color: white; text-align: center; cursor: pointer;">
+        <span style="font-size: 22px;">📞</span>
+        <p style="font-size: 10px; margin: 0;">Ligar</p>
+    </div>
+</div>
 </body>
 </html>
