@@ -1,19 +1,50 @@
-<div id="oio-tok-container" style="height: 100vh; background: #000; overflow-y: scroll; snap-type: y mandatory;">
-    
-    <div style="height: 100vh; snap-align: start; position: relative;">
-        <video src="LINK_DO_SEU_VIDEO" loop playsinline style="width: 100%; height: 100%; object-fit: cover;" onclick="this.paused ? this.play() : this.pause()"></video>
-        
-        <div style="position: absolute; bottom: 100px; left: 20px; color: white; font-family: sans-serif;">
-            <h2 style="margin: 0;">@MichelDetilli</h2>
-            <p>OIO ONE - Ergonomia Dinâmica</p>
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OIO TOK - Interface de Profundidade</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; color: white; }
+        #oio-tok-container { height: 100vh; overflow-y: scroll; snap-type: y mandatory; scroll-behavior: smooth; }
+        .video-page { height: 100vh; snap-align: start; position: relative; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #111 0%, #000 100%); }
+        .voltar-btn { position: absolute; top: 20px; left: 20px; background: cyan; color: #000; padding: 10px 20px; border-radius: 20px; text-decoration: none; font-weight: bold; z-index: 100; box-shadow: 0 0 15px cyan; }
+        .info { position: absolute; bottom: 40px; left: 20px; z-index: 10; }
+        .neon-loader { width: 50px; height: 50px; border: 3px solid transparent; border-top: 3px solid cyan; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <a href="vibe.html" class="voltar-btn">← VOLTAR AO CHAT</a>
+
+    <div id="oio-tok-container">
+        <div class="video-page">
+            <div class="neon-loader"></div> <div class="info">
+                <h2 style="margin: 0;">@MichelDetilli</h2>
+                <p>OIO ONE - Ergonomia Dinâmica</p>
+            </div>
         </div>
     </div>
 
-</div>
+    <script>
+        const container = document.getElementById('oio-tok-container');
+        
+        // Ativador de vibração nativa no Salto Quântico (Scroll)
+        container.addEventListener('scroll', () => {
+            if (window.navigator.vibrate) window.navigator.vibrate(15);
+        });
 
-<script>
-    // Ativador de vibração nativa ao trocar de vídeo (Salto Quântico)
-    document.getElementById('oio-tok-container').addEventListener('scroll', () => {
-        if (window.navigator.vibrate) window.navigator.vibrate(10);
-    });
-</script>
+        // Inteligência de toque para Profundidade
+        let startY = 0;
+        container.addEventListener('touchstart', e => { startY = e.touches[0].pageY; });
+        container.addEventListener('touchend', e => {
+            let endY = e.changedTouches[0].pageY;
+            if(Math.abs(startY - endY) > 50) {
+                console.log("Salto Quântico Detectado");
+            }
+        });
+    </script>
+
+</body>
+</html>
