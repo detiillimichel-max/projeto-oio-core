@@ -3,43 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OIO ONE - Pro</title>
+    <title>OIO ONE - V5 PRO</title>
     
-    <link rel="icon" type="image/png" href="icone-512.png">
-    <link rel="apple-touch-icon" href="icone-512.png">
+    <link rel="icon" href="icone-512.png">
     <link rel="manifest" href="manifest.json">
     
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
 
     <style>
-        body { margin: 0; background: #000; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
-        #caixa-msg { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 90px; }
-        .balao { background: rgba(0, 242, 254, 0.1); padding: 12px; border-radius: 18px; border-left: 4px solid #00f2fe; max-width: 80%; position: relative; word-wrap: break-word; }
-        .minha { align-self: flex-end; border-left: none; border-right: 4px solid #fff; background: rgba(255,255,255,0.1); }
-        .info-msg { font-size: 10px; opacity: 0.5; margin-top: 5px; display: block; text-align: right; }
-        .controles { position: fixed; bottom: 0; width: 100%; padding: 10px; background: #111; display: flex; align-items: center; gap: 8px; box-sizing: border-box; border-top: 1px solid #333; }
-        .btn-extra { background: none; border: none; font-size: 20px; cursor: pointer; color: #00f2fe; padding: 5px; }
-        input { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #222; color: #fff; outline: none; font-size: 16px; }
-        .btn-enviar { width: 50px; height: 50px; border-radius: 50%; border: none; background: #00f2fe; color: #000; font-weight: bold; cursor: pointer; }
+        :root { --accent: #00f2fe; }
+        body { margin: 0; background: #000; color: white; font-family: sans-serif; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
+        
+        /* CAMADA DE IDENTIDADE (TOP) */
+        .header-identidade { padding: 20px; display: flex; gap: 15px; overflow-x: auto; border-bottom: 1px solid #222; }
+        .user-avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--accent); background: #111; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; }
+        .user-avatar.online::after { content: ''; position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; background: #00ff00; border-radius: 50%; border: 2px solid #000; }
+
+        /* CAMADA DE INTERAÇÃO (CHAT) */
+        #area-principal { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; padding-bottom: 100px; }
+        .balao { padding: 12px; border-radius: 18px; max-width: 80%; font-size: 15px; line-height: 1.4; border-left: 4px solid var(--accent); background: rgba(0, 242, 254, 0.05); }
+        .minha { align-self: flex-end; border-left: none; border-right: 4px solid #fff; background: rgba(255,255,255,0.05); }
+
+        /* GAVETA DE VIDRO (ERGONOMIA DINÂMICA) */
+        .gaveta-vidro { position: fixed; bottom: 0; width: 100%; background: rgba(20, 20, 20, 0.8); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,0.1); border-radius: 25px 25px 0 0; padding: 15px; box-sizing: border-box; }
+        .input-row { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
+        input { flex: 1; background: #222; border: none; padding: 12px 20px; border-radius: 30px; color: #fff; outline: none; }
+        
+        /* SALTO QUÂNTICO (MENU DE MÓDULOS) */
+        .menu-modulos { display: flex; justify-content: space-around; padding-top: 10px; border-top: 1px solid #333; }
+        .btn-modulo { background: none; border: none; color: #aaa; font-size: 11px; cursor: pointer; transition: 0.3s; }
+        .btn-modulo:hover { color: var(--accent); }
     </style>
 </head>
 <body>
-    <div id="caixa-msg"></div>
 
-    <div class="controles">
-        <button class="btn-extra" onclick="document.getElementById('file-input').click()">📷</button>
-        <button class="btn-extra" onclick="window.location.href='tel:+5511999999999'">📞</button>
-        <input id="msg-input" placeholder="Sua vibe..." autocomplete="off">
-        <button class="btn-enviar" onclick="enviar()">➤</button>
-        <input type="file" id="file-input" style="display:none" accept="image/*,video/*">
+    <div class="header-identidade" id="lista-contatos">
+        <div class="user-avatar online" id="meu-perfil">⭐</div>
+        <div class="user-avatar" onclick="alert('Abrindo Gabriela...')">G</div>
     </div>
 
-    <audio id="som-notifica" src="https://www.soundjay.com/buttons/sounds/button-50.mp3" preload="auto"></audio>
+    <div id="area-principal"></div>
+
+    <div class="gaveta-vidro">
+        <div class="input-row">
+            <button class="btn-modulo" onclick="document.getElementById('file-input').click()">📷</button>
+            <input id="msg-input" placeholder="Sua vibe...">
+            <button onclick="enviar()" style="background: var(--accent); border: none; width: 45px; height: 45px; border-radius: 50%; font-weight: bold;">➤</button>
+        </div>
+        
+        <div class="menu-modulos">
+            <button class="btn-modulo" onclick="mudarModulo('chat')">💬<br>CHAT</button>
+            <button class="btn-modulo" onclick="window.location.href='videos.html'">🎬<br>VÍDEOS</button>
+            <button class="btn-modulo" onclick="window.location.href='games.html'">🕹️<br>ARCADE</button>
+            <button class="btn-modulo" onclick="window.location.href='tel:+5511999999999'">📞<br>LIGAR</button>
+        </div>
+    </div>
+
+    <input type="file" id="file-input" style="display:none" accept="image/*">
+    <audio id="som-notifica" src="https://www.soundjay.com/buttons/sounds/button-50.mp3"></audio>
 
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyBG3oBoBvOwySN04gR0CgCCXToDG-av60",
+            apiKey: "AIzaSyBG3oBoBvOwySN04gR0CgCCXToZ0G-av60",
             authDomain: "vibe-app-bbba2.firebaseapp.com",
             databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/",
             projectId: "vibe-app-bbba2",
@@ -51,63 +77,40 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // NOME DO USUÁRIO (PEDE SÓ UMA VEZ)
-        let meuNome = localStorage.getItem("oio_nome");
-        if (!meuNome) {
-            meuNome = prompt("Nome OIO ONE:") || "Michel";
-            localStorage.setItem("oio_nome", meuNome);
-        }
+        let meuNome = localStorage.getItem("oio_nome") || prompt("Nome OIO ONE:") || "Michel";
+        localStorage.setItem("oio_nome", meuNome);
 
-        // --- DESTRAVA SOM NO PRIMEIRO CLIQUE ---
-        document.body.addEventListener('click', function() {
+        // DESTRAVA ÁUDIO
+        document.body.addEventListener('click', () => {
             const s = document.getElementById("som-notifica");
-            s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(()=>{});
+            s.play().then(() => { s.pause(); s.currentTime = 0; });
         }, { once: true });
 
-        let ultimoEnvio = 0;
-
-        // RECEBER MENSAGENS
-        db.ref("chat_geral").limitToLast(20).on("child_added", snap => {
-            const msg = snap.val();
+        // ESCUTAR FIREBASE
+        db.ref("chat_geral").limitToLast(15).on("child_added", snap => {
+            const m = snap.val();
             const div = document.createElement("div");
-            const dataObjeto = new Date(msg.data);
-            const hora = dataObjeto.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const dataTexto = dataObjeto.toLocaleDateString();
-            
-            div.className = "balao" + (msg.autor === meuNome ? " minha" : "");
-            div.innerHTML = `<strong>${msg.autor}</strong><br>${msg.texto}<span class="info-msg">${dataTexto} - ${hora}</span>`;
-            
-            const container = document.getElementById("caixa-msg");
-            container.appendChild(div);
-            container.scrollTop = container.scrollHeight;
+            div.className = "balao" + (m.autor === meuNome ? " minha" : "");
+            div.innerHTML = `<strong>${m.autor}</strong><br>${m.texto}`;
+            document.getElementById("area-principal").appendChild(div);
+            document.getElementById("area-principal").scrollTop = 99999;
 
-            // Tocar som se não for minha mensagem
-            if(msg.autor !== meuNome) {
-                const audio = document.getElementById("som-notifica");
-                audio.play().catch(()=>{});
-                if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
+            if(m.autor !== meuNome) {
+                document.getElementById("som-notifica").play().catch(()=>{});
             }
         });
 
-        // FUNÇÃO ENVIAR
         function enviar() {
             const input = document.getElementById("msg-input");
-            const agora = Date.now();
-
-            if (agora - ultimoEnvio < 2000) { return; } // Anti-spam 2s
-
             if (input.value.trim()) {
-                ultimoEnvio = agora;
                 db.ref("chat_geral").push({
                     autor: meuNome,
                     texto: input.value,
-                    data: agora
+                    data: Date.now()
                 });
                 input.value = "";
             }
         }
-
-        document.getElementById("msg-input").addEventListener("keypress", e => { if(e.key === "Enter") enviar(); });
     </script>
 </body>
 </html>
