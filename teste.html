@@ -3,28 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OIO ONE - Pro</title><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OIO ONE - Pro</title>
     
+    <link rel="icon" type="image/png" href="icone-512.png">
+    <link rel="apple-touch-icon" href="icone-512.png">
     <link rel="manifest" href="manifest.json">
     
-    <script src="https://www.gstatic.com..."></script>
-    ...
-        
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+
     <style>
         body { margin: 0; background: #000; color: white; font-family: sans-serif; display: flex; flex-direction: column; height: 100dvh; overflow: hidden; }
         #caixa-msg { flex: 1; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 12px; padding-bottom: 90px; }
-        .balao { background: rgba(0, 242, 254, 0.1); padding: 12px; border-radius: 18px; border-left: 4px solid #00f2fe; max-width: 80%; position: relative; }
+        .balao { background: rgba(0, 242, 254, 0.1); padding: 12px; border-radius: 18px; border-left: 4px solid #00f2fe; max-width: 80%; position: relative; word-wrap: break-word; }
         .minha { align-self: flex-end; border-left: none; border-right: 4px solid #fff; background: rgba(255,255,255,0.1); }
         .info-msg { font-size: 10px; opacity: 0.5; margin-top: 5px; display: block; text-align: right; }
         .controles { position: fixed; bottom: 0; width: 100%; padding: 10px; background: #111; display: flex; align-items: center; gap: 8px; box-sizing: border-box; border-top: 1px solid #333; }
         .btn-extra { background: none; border: none; font-size: 20px; cursor: pointer; color: #00f2fe; padding: 5px; }
         input { flex: 1; padding: 12px; border-radius: 25px; border: none; background: #222; color: #fff; outline: none; font-size: 16px; }
-        .btn-enviar { width: 50px; height: 50px; border-radius: 50%; border: none; background: #00f2fe; color: #000; font-weight: bold; }
+        .btn-enviar { width: 50px; height: 50px; border-radius: 50%; border: none; background: #00f2fe; color: #000; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -38,11 +35,11 @@
         <input type="file" id="file-input" style="display:none" accept="image/*,video/*">
     </div>
 
-    <audio id="som-notifica" src="https://www.soundjay.com/buttons/sounds/button-50.mp3"></audio>
+    <audio id="som-notifica" src="https://www.soundjay.com/buttons/sounds/button-50.mp3" preload="auto"></audio>
 
     <script>
         const firebaseConfig = {
-            apiKey: "AIzaSyBG3oBoBvOwySN64gR6CgCcXTo2DG-av60",
+            apiKey: "AIzaSyBG3oBoBvOwySN04gR0CgCCXToDG-av60",
             authDomain: "vibe-app-bbba2.firebaseapp.com",
             databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/",
             projectId: "vibe-app-bbba2",
@@ -53,37 +50,51 @@
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        let meuNome = localStorage.getItem("oio_nome") || prompt("Nome OIO ONE:") || "Michel";
-        localStorage.setItem("oio_nome", meuNome);
+
+        // NOME DO USUÁRIO (PEDE SÓ UMA VEZ)
+        let meuNome = localStorage.getItem("oio_nome");
+        if (!meuNome) {
+            meuNome = prompt("Nome OIO ONE:") || "Michel";
+            localStorage.setItem("oio_nome", meuNome);
+        }
+
+        // --- DESTRAVA SOM NO PRIMEIRO CLIQUE ---
+        document.body.addEventListener('click', function() {
+            const s = document.getElementById("som-notifica");
+            s.play().then(() => { s.pause(); s.currentTime = 0; }).catch(()=>{});
+        }, { once: true });
 
         let ultimoEnvio = 0;
 
+        // RECEBER MENSAGENS
         db.ref("chat_geral").limitToLast(20).on("child_added", snap => {
             const msg = snap.val();
             const div = document.createElement("div");
-            const hora = new Date(msg.data).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            const data = new Date(msg.data).toLocaleDateString();
+            const dataObjeto = new Date(msg.data);
+            const hora = dataObjeto.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const dataTexto = dataObjeto.toLocaleDateString();
             
             div.className = "balao" + (msg.autor === meuNome ? " minha" : "");
-            div.innerHTML = `<strong>${msg.autor}</strong><br>${msg.texto}<span class="info-msg">${data} - ${hora}</span>`;
+            div.innerHTML = `<strong>${msg.autor}</strong><br>${msg.texto}<span class="info-msg">${dataTexto} - ${hora}</span>`;
             
-            document.getElementById("caixa-msg").appendChild(div);
-            document.getElementById("caixa-msg").scrollTop = 999999;
+            const container = document.getElementById("caixa-msg");
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
 
+            // Tocar som se não for minha mensagem
             if(msg.autor !== meuNome) {
-                document.getElementById("som-notifica").play().catch(()=>{});
+                const audio = document.getElementById("som-notifica");
+                audio.play().catch(()=>{});
                 if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
             }
         });
 
+        // FUNÇÃO ENVIAR
         function enviar() {
             const input = document.getElementById("msg-input");
             const agora = Date.now();
 
-            if (agora - ultimoEnvio < 3000) {
-                alert("Calma! Anti-spam ativo (espere 3s)");
-                return;
-            }
+            if (agora - ultimoEnvio < 2000) { return; } // Anti-spam 2s
 
             if (input.value.trim()) {
                 ultimoEnvio = agora;
