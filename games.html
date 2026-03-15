@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OIO GAMES</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background: #000; color: #fff; font-family: sans-serif; margin: 0; padding: 20px; text-align: center; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .voltar-btn { color: #00e5ff; text-decoration: none; font-size: 14px; font-weight: bold; }
+        .grid-games { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .game-card { background: #111; border: 1px solid rgba(0, 229, 255, 0.2); border-radius: 20px; padding: 25px 10px; display: flex; flex-direction: column; align-items: center; gap: 12px; cursor: pointer; text-decoration: none; color: #fff; transition: 0.3s; }
+        .game-card i { font-size: 35px; color: #00e5ff; }
+        .game-card span { font-weight: bold; letter-spacing: 1px; font-size: 12px; }
+        .game-card:active { transform: scale(0.9); background: #00e5ff22; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <a href="vibe.html" class="voltar-btn"><i class="fa-solid fa-chevron-left"></i> VOLTAR</a>
+        <h3 style="margin:0; color:#00e5ff; letter-spacing: 2px;">OIO ARCADE</h3>
+        <div style="width:60px"></div>
+    </div>
+
+    <div class="grid-games">
+        <a href="https://play2048.co/" class="game-card">
+            <i class="fa-solid fa-brain"></i>
+            <span>2048</span>
+        </a>
+        
+        <a href="https://www.google.com/logos/2010/pacman10-i.html" class="game-card">
+            <i class="fa-solid fa-ghost"></i>
+            <span>PAC-MAN</span>
+        </a>
+
+        <a href="https://tetris.com/play-tetris" class="game-card">
+            <i class="fa-solid fa-cubes"></i>
+            <span>TETRIS</span>
+        </a>
+
+        <a href="https://m.chess.com/" class="game-card">
+            <i class="fa-solid fa-chess"></i>
+            <span>XADREZ</span>
+        </a>
+    </div>
+
+    <p style="margin-top: 40px; font-size: 10px; opacity: 0.4;">Módulo de Entretenimento | Autoria Michel Detilli</p>
+
+</body>
+</html>
