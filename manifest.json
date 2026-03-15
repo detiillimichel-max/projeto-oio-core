@@ -1,0 +1,21 @@
+{
+  "name": "OIO TOC",
+  "short_name": "OIO TOC",
+  "description": "Interface Orgânica por Profundidade",
+  "start_url": "teste.html",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#00E5FF",
+  "icons": [
+    {
+      "src": "https://via.placeholder.com/192x192.png?text=OIO",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://via.placeholder.com/512x512.png?text=OIO",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
