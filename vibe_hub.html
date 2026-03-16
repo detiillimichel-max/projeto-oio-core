@@ -8,72 +8,31 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <style>
         body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
-        
-        /* FEED TIKTOK: Deslize Magnético Nativo */
-        .feed-tiktok {
-            height: 100vh;
-            overflow-y: scroll;
-            scroll-snap-type: y mandatory;
-            scroll-behavior: smooth;
-            -webkit-overflow-scrolling: touch;
-        }
-        .video-card {
-            height: 100vh;
-            scroll-snap-align: start;
-            scroll-snap-stop: always;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            background: #000;
-            position: relative;
-        }
+        .feed-tiktok { height: 100vh; overflow-y: scroll; scroll-snap-type: y mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        .video-card { height: 100vh; scroll-snap-align: start; scroll-snap-stop: always; display: flex; flex-direction: column; justify-content: center; background: #000; position: relative; }
         video { width: 100%; max-height: 85vh; object-fit: contain; }
         .info-video { position: absolute; bottom: 120px; left: 20px; text-shadow: 2px 2px 5px #000; }
-
-        /* ARCADE: Menu de Jogos Clássicos */
-        .arcade-menu {
-            position: fixed; top: 20px; right: 20px; z-index: 100;
-            display: flex; flex-direction: column; gap: 12px;
-        }
-        .btn-game {
-            background: rgba(0, 0, 0, 0.6); border: 1px solid #00f2fe;
-            color: #00f2fe; width: 50px; height: 50px; border-radius: 50%; 
-            font-size: 22px; backdrop-filter: blur(5px); box-shadow: 0 0 10px rgba(0,242,254,0.3);
-        }
-
-        /* BOTÕES DE AÇÃO */
-        .btn-postar {
-            position: fixed; bottom: 90px; right: 20px; 
-            background: #00f2fe; border: none; width: 60px; height: 60px; 
-            border-radius: 50%; font-size: 30px; color: #000; z-index: 100;
-            box-shadow: 0 0 20px #00f2fe;
-        }
-        .btn-voltar {
-            position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%);
-            background: rgba(255,255,255,0.1); border: 1px solid #333; color: #fff;
-            padding: 10px 30px; border-radius: 25px; z-index: 100; backdrop-filter: blur(5px);
-        }
+        .arcade-menu { position: fixed; top: 20px; right: 20px; z-index: 100; display: flex; flex-direction: column; gap: 12px; }
+        .btn-game { background: rgba(0, 0, 0, 0.6); border: 1px solid #00f2fe; color: #00f2fe; width: 50px; height: 50px; border-radius: 50%; font-size: 22px; backdrop-filter: blur(5px); box-shadow: 0 0 10px rgba(0,242,254,0.3); }
+        .btn-postar { position: fixed; bottom: 90px; right: 20px; background: #00f2fe; border: none; width: 60px; height: 60px; border-radius: 50%; font-size: 30px; color: #000; z-index: 100; box-shadow: 0 0 20px #00f2fe; }
+        .btn-voltar { position: fixed; bottom: 25px; left: 50%; transform: translateX(-50%); background: rgba(0, 242, 254, 0.2); border: 1px solid #00f2fe; color: #fff; padding: 10px 30px; border-radius: 25px; z-index: 100; backdrop-filter: blur(5px); text-decoration: none; font-size: 14px; }
     </style>
 </head>
 <body>
-
     <div class="arcade-menu">
-        <button class="btn-game" onclick="window.location.href='https://m.pacman.com/'" title="Pac-Man">👻</button>
+        <button class="btn-game" onclick="window.location.href='https://www.google.com/logos/2010/pacman10-i.html'" title="Pac-Man">👻</button>
         <button class="btn-game" onclick="window.location.href='https://tetris.com/play-tetris'" title="Tetris">🧊</button>
         <button class="btn-game" onclick="window.location.href='https://play2048.co/'" title="2048">🧠</button>
         <button class="btn-game" onclick="window.location.href='https://playsnake.org/'" title="Snake">🐍</button>
     </div>
-
     <div class="feed-tiktok" id="feed">
         <div class="video-card">
-            <h2 style="text-align:center; color:#00f2fe; animate: pulse 2s infinite;">⭐ OIO TOC</h2>
-            <p style="text-align:center; opacity:0.6;">Deslize para cima para ver memórias</p>
+            <h2 style="text-align:center; color:#00f2fe;">⭐ OIO TOC</h2>
+            <p style="text-align:center; opacity:0.6;">Deslize para ver memórias</p>
         </div>
     </div>
-
     <button class="btn-postar" onclick="postarMemoria()">＋</button>
-    <button class="btn-voltar" onclick="window.location.href='vibe_connect.html'">❮ VOLTAR AO CHAT</button>
-
+    <a href="vibe_connect.html" class="btn-voltar">❮ VOLTAR AO CHAT</a>
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBG3oBoBvOwySN04gR0CgCCXToZ0G-av60",
@@ -86,34 +45,20 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-
-        // BUSCAR VÍDEOS (Últimos 10 para ser leve)
         db.ref('feed_tiktok').limitToLast(10).on('value', snap => {
             const feed = document.getElementById('feed');
             feed.innerHTML = '<div class="video-card"><h2 style="text-align:center; color:#00f2fe;">⭐ OIO TOC</h2><p style="text-align:center; opacity:0.6;">Deslize para ver</p></div>'; 
             snap.forEach(item => {
                 const v = item.val();
-                feed.innerHTML += `
-                    <div class="video-card">
-                        <video src="${v.url}" loop onclick="this.paused?this.play():this.pause()"></video>
-                        <div class="info-video"><strong>@${v.autor}</strong></div>
-                    </div>`;
+                feed.innerHTML += `<div class="video-card"><video src="${v.url}" loop onclick="this.paused?this.play():this.pause()"></video><div class="info-video"><strong>@${v.autor}</strong></div></div>`;
             });
         });
-
-        // POSTAR MEMÓRIA (Sinal da Estrela ⭐)
         async function postarMemoria() {
-            const link = prompt("Cole o link do vídeo (Drive ou YouTube):");
+            const link = prompt("Cole o link do vídeo:");
             if (link) {
                 if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-                const som = new Audio('https://www.soundjay.com/buttons/sounds/button-37a.mp3');
-                som.play();
-
-                await db.ref('feed_tiktok').push({
-                    autor: localStorage.getItem("oio_nome") || "Michel",
-                    url: link,
-                    data: Date.now()
-                });
+                new Audio('https://www.soundjay.com/buttons/sounds/button-37a.mp3').play();
+                await db.ref('feed_tiktok').push({ autor: localStorage.getItem("oio_nome") || "Michel", url: link, data: Date.now() });
                 alert("Memória enviada! 🚀");
             }
         }
