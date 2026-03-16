@@ -1,26 +1,17 @@
 {
-  "name": "OIOMSM",
+  "name": "OIO ONE MSM",
   "short_name": "OIO",
-  "start_url": "teste.html",
+  "start_url": "vibe_connect.html",
   "display": "standalone",
   "background_color": "#000000",
   "theme_color": "#00f2fe",
-  "description": "Interface Organica",
+  "description": "Interface Organica por Profundidade",
   "icons": [
     {
-      "src": "https://pwa-screenshot-generator.vercel.app/api/placeholder",
+      "src": "icone-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     }
-  ],
-  "share_target": {
-    "action": "teste.html",
-    "method": "GET",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url"
-    }
-  }
+  ]
 }
