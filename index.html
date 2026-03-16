@@ -3,34 +3,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OIO ONE</title>
+    <title>OIO ONE - Central</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
+    <link rel="manifest" href="manifest.json">
     <style>
         body { margin: 0; background: radial-gradient(circle at center, #001219 0%, #000 100%); color: white; font-family: sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+        
+        /* MENU SUPERIOR: A Ponte entre as Pastas */
+        .menu-topo { display: flex; justify-content: space-around; padding: 15px; background: rgba(0,0,0,0.8); border-bottom: 1px solid rgba(0,242,254,0.3); }
+        .btn-nav { background: none; border: 1px solid #00f2fe; color: #00f2fe; padding: 8px 15px; border-radius: 15px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; }
+
         #caixa-msg { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
-        .balao { background: rgba(0, 242, 254, 0.1); padding: 12px 18px; border-radius: 20px; border-left: 4px solid #00f2fe; align-self: flex-start; max-width: 80%; word-wrap: break-word; }
+        .balao { background: rgba(0, 242, 254, 0.1); padding: 12px 18px; border-radius: 20px; border-left: 4px solid #00f2fe; align-self: flex-start; max-width: 80%; }
         .minha-msg { align-self: flex-end; border-left: none; border-right: 4px solid #fff; background: rgba(255,255,255,0.1); }
-        .controles { padding: 15px; background: rgba(0,0,0,0.8); display: flex; gap: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+        
+        .controles { padding: 15px; background: rgba(0,0,0,0.9); display: flex; gap: 10px; align-items: center; }
         #vibe-txt { flex: 1; padding: 15px; border-radius: 25px; border: none; background: #111; color: #fff; outline: none; }
-        button { width: 55px; height: 55px; border-radius: 50%; border: none; background: #00f2fe; color: #000; font-weight: bold; }
+        .btn-enviar { width: 50px; height: 50px; border-radius: 50%; border: none; background: #00f2fe; color: #000; font-size: 20px; }
     </style>
 </head>
 <body>
-    <div id="caixa-msg"></div>
-    <div class="controles">
-        <input id="vibe-txt" type="text" placeholder="Sua vibe..." onkeypress="if(event.key==='Enter') enviar()">
-        <button onclick="enviar()">🚀</button>
+
+    <div class="menu-topo">
+        <button class="btn-nav" onclick="window.location.href='vibe_connect.html'">💬 Chat</button>
+        <button class="btn-nav" onclick="window.location.href='vibe_hub.html'">🎬 Hub</button>
+        <button class="btn-nav" onclick="window.location.href='games.html'">🎮 Games</button>
     </div>
-    <audio id="somBip" src="https://www.soundjoy.com/buttons/sounds/button-50.mp3"></audio>
+
+    <div id="caixa-msg"></div>
+
+    <div class="controles">
+        <button onclick="window.location.href='vibe_hub.html'" style="background:none; border:none; font-size:24px;">🎞️</button>
+        <input id="vibe-txt" type="text" placeholder="Sua vibe..." onkeypress="if(event.key==='Enter') enviar()">
+        <button class="btn-enviar" onclick="enviar()">🚀</button>
+    </div>
+
+    <audio id="somBip" src="https://www.soundjay.com/buttons/sounds/button-50.mp3"></audio>
+
     <script>
-        const config = { databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/" };
+        // CONFIGURAÇÃO COMPLETA PARA O VERCEL FUNCIONAR
+        const config = {
+            apiKey: "AIzaSyBG3oBoBvOwySN04gR0CgCCXToZ0G-av60",
+            authDomain: "vibe-app-bbba2.firebaseapp.com",
+            databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/",
+            projectId: "vibe-app-bbba2",
+            storageBucket: "vibe-app-bbba2.appspot.com",
+            messagingSenderId: "329513213082",
+            appId: "1:329513213082:web:3938e86538f8a04a05323"
+        };
         firebase.initializeApp(config);
         const db = firebase.database();
+
         let meuNome = localStorage.getItem("oio_nome") || prompt("Seu nome:", "Michel");
         localStorage.setItem("oio_nome", meuNome);
+
         let carregando = true;
         db.ref("chat_geral").once("value", () => { carregando = false; });
+
         db.ref("chat_geral").limitToLast(15).on("child_added", (snap) => {
             const msg = snap.val();
             const caixa = document.getElementById('caixa-msg');
@@ -39,11 +69,13 @@
             div.innerHTML = `<strong>${msg.autor}</strong><br>${msg.texto}`;
             caixa.appendChild(div);
             caixa.scrollTop = caixa.scrollHeight;
+            
             if (!carregando && msg.autor !== meuNome) {
                 document.getElementById('somBip').play().catch(() => {});
                 if (navigator.vibrate) navigator.vibrate(200);
             }
         });
+
         function enviar() {
             const input = document.getElementById('vibe-txt');
             if (input.value.trim()) {
