@@ -46,10 +46,19 @@
         <button onclick="enviar()" style="background:#00f2fe; border:none; border-radius:50%; width:45px;">✈️</button>
     </div>
 
-    <script>
-        const firebaseConfig = { /* COLE SEU CONFIG AQUI */ };
+        <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBG3oBoBvOwySN04gR0CgCCXToZ0G-av60",
+            authDomain: "vibe-app-bbba2.firebaseapp.com",
+            databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/",
+            projectId: "vibe-app-bbba2",
+            storageBucket: "vibe-app-bbba2.appspot.com",
+            messagingSenderId: "329513213082",
+            appId: "1:329513213082:web:3938e86538f8a04a05323"
+        };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+            
 
         // OTIMIZAÇÃO: BUSCA APENAS AS ÚLTIMAS 20 MENSAGENS
         db.ref("chat_geral").limitToLast(20).on("child_added", snap => {
