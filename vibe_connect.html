@@ -45,7 +45,8 @@
         <input id="input-msg" placeholder="Sua vibe...">
         <button onclick="enviar()" style="background:#00f2fe; border:none; border-radius:50%; width:45px;">✈️</button>
     </div>
-
+<button onclick="postarMemoria()" style="position: fixed; bottom: 80px; right: 20px; background: #00f2fe; border: none; width: 60px; height: 60px; border-radius: 50%; font-size: 30px; box-shadow: 0 0 15px #00f2fe; z-index: 100;">＋</button>
+    
         <script>
         const firebaseConfig = {
             apiKey: "AIzaSyBG3oBoBvOwySN04gR0CgCCXToZ0G-av60",
@@ -78,6 +79,25 @@
                 if(navigator.vibrate) navigator.vibrate(50); // VIBRAÇÃO NATIVA
             }
         }
+          async function postarMemoria() {
+    const link = prompt("Cole o link do vídeo (Drive ou YouTube):");
+    if (link) {
+        // Sinal da Estrela ⭐
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        const som = new Audio('https://www.soundjay.com/buttons/sounds/button-37a.mp3');
+        som.play();
+
+        // Envia para o banco de dados
+        await db.ref('feed_tiktok').push({
+            autor: localStorage.getItem("oio_nome") || "Michel",
+            url: link,
+            data: Date.now()
+        });
+
+        alert("Memória enviada para o Feed! 🚀");
+    }
+          }
+            
     </script>
 </body>
 </html>
