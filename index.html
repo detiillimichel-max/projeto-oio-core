@@ -2,19 +2,14 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OIO ONE</title>
-    <style>
-        body { margin:0; background:#000; height:100vh; display:flex; align-items:center; justify-content:center; }
-        .estrela { width:80px; height:80px; background:#00f2fe; border-radius:50%; box-shadow:0 0 30px #00f2fe; animation: pulse 2s infinite; cursor:pointer; }
-        @keyframes pulse { 0% { transform:scale(1); opacity:0.8; } 50% { transform:scale(1.1); opacity:1; } 100% { transform:scale(1); opacity:0.8; } }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>OIO CORE</title>
+    <link rel="stylesheet" href="css/oio-main.css">
 </head>
 <body onclick="window.location.href='vibe_connect.html'">
+
     <div class="estrela"></div>
-    <script>
-        // Redireciona automaticamente após 2 segundos
-        setTimeout(() => { window.location.href='vibe_connect.html'; }, 2000);
-    </script>
+
+    <script src="js/oio-logic.js"></script>
 </body>
 </html>
