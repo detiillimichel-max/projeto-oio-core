@@ -1,0 +1,21 @@
+/* Efeito de Piscada para Novos Módulos */
+@keyframes piscarAcoplamento {
+    0% { box-shadow: 0 0 0px #00f2fe; border: 1px solid transparent; }
+    50% { box-shadow: 0 0 30px #00f2fe; border: 1px solid #00f2fe; }
+    100% { box-shadow: 0 0 0px #00f2fe; border: 1px solid transparent; }
+}
+
+.modulo-novo {
+    animation: piscarAcoplamento 1.5s ease-in-out 3; /* Pisca 3 vezes ao encaixar */
+}
+
+/* Identidade Orgânica: O brilho da Estrela ⭐ */
+.estrela-status {
+    width: 12px;
+    height: 12px;
+    background: #00f2fe;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 10px #00f2fe;
+    margin-right: 5px;
+}
