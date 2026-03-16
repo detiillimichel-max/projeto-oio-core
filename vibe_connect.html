@@ -19,9 +19,9 @@
         .outra { align-self: flex-start; background: #1a1a1a; border: 1px solid #333; color: #fff; }
         .controles { position: fixed; bottom: 0; width: 100%; padding: 10px; background: #000; display: flex; gap: 10px; border-top: 1px solid #222; box-sizing: border-box; align-items: center; }
         input { flex: 1; padding: 12px; border-radius: 25px; border: 1px solid #333; background: #111; color: #fff; outline: none; }
-        .btn-midia { background: none; border: none; font-size: 20px; color: #00f2fe; }
+        .btn-midia { background: none; border: none; font-size: 22px; color: #00f2fe; cursor: pointer; }
         .btn-enviar { background: #00f2fe; border: none; border-radius: 50%; width: 45px; height: 45px; color: #000; font-size: 20px; }
-        .nav-hub { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: rgba(0, 242, 254, 0.1); padding: 5px 20px; border-radius: 20px; border: 1px solid #00f2fe; font-size: 11px; color: #00f2fe; }
+        .nav-hub { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); background: rgba(0, 242, 254, 0.1); padding: 5px 20px; border-radius: 20px; border: 1px solid #00f2fe; font-size: 11px; color: #00f2fe; cursor: pointer; z-index: 20; }
     </style>
 </head>
 <body>
@@ -34,7 +34,7 @@
     <div class="controles">
         <button class="btn-midia" onclick="alert('Câmera Ativa ⭐')">📷</button>
         <button class="btn-midia" onclick="alert('Gravando Áudio ⭐')">🎤</button>
-        <input id="input-msg" placeholder="Sua vibe...">
+        <input id="input-msg" placeholder="Sua vibe..." autocomplete="off">
         <button class="btn-enviar" onclick="enviar()">✈️</button>
     </div>
     <script>
@@ -54,7 +54,7 @@
             if (!localStorage.getItem('boas_vindas_oio')) {
                 setTimeout(() => {
                     if (navigator.vibrate) navigator.vibrate([100, 200]);
-                    new Audio('https://www.soundjay.com/buttons/sounds/button-09a.mp3').play();
+                    new Audio('https://www.soundjay.com/buttons/sounds/button-09a.mp3').play().catch(()=>{});
                     const div = document.createElement("div");
                     div.className = "msg outra";
                     div.style.border = "1px solid #00f2fe";
