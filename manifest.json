@@ -1,10 +1,11 @@
 {
   "name": "OIO ONE MSM",
   "short_name": "OIO",
-  "start_url": "vibe_connect.html",
+  "start_url": "teste.html",
+  "scope": "./",
   "display": "standalone",
-  "background_color": "#000000",
-  "theme_color": "#00f2fe",
+  "background_color": "#E8E5DF",
+  "theme_color": "#C4C4C4",
   "description": "Interface Organica por Profundidade",
   "icons": [
     {
