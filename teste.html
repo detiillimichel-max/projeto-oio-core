@@ -1,184 +1,37 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>OIO ONE - V5 PRO</title>
-    <link rel="icon" href="icone-512.png">
-    <link rel="manifest" href="manifest.json">
-
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-
-    <style>
-        :root { --accent: #00f2fe; }
-        * { box-sizing: border-box; }
-        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; height: 100dvh; overflow: hidden; display: flex; flex-direction: column; }
-        .header-identidade { padding: 20px; display: flex; gap: 15px; overflow-x: auto; border-bottom: 1px solid #222; flex-shrink: 0; }
-        .user-avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--accent); background: #111; display: flex; align-items: center; justify-content: center; flex-shrink: 0; position: relative; }
-        .user-avatar.online::after { content: ''; position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; background: #00ff00; border-radius: 50%; border: 2px solid #000; }
-        #area-principal { flex: 1; min-height: 0; overflow-y: auto; padding: 15px 15px 180px; display: flex; flex-direction: column; gap: 10px; }
-        .balao { padding: 12px; border-radius: 18px; max-width: 80%; font-size: 15px; line-height: 1.4; border-left: 4px solid var(--accent); background: rgba(0,242,254,.05); overflow-wrap: anywhere; }
-        .minha { align-self: flex-end; border-left: none; border-right: 4px solid #fff; background: rgba(255,255,255,.05); }
-        .status { align-self: center; color: #777; font-size: 12px; text-align: center; padding: 8px; }
-        .gaveta-vidro { position: fixed; z-index: 10; bottom: 0; left: 0; width: 100%; background: rgba(20,20,20,.9); backdrop-filter: blur(20px); border-top: 1px solid rgba(255,255,255,.1); border-radius: 25px 25px 0 0; padding: 15px; }
-        .input-row { display: flex; gap: 10px; align-items: center; margin-bottom: 15px; }
-        input { min-width: 0; flex: 1; background: #222; border: none; padding: 12px 20px; border-radius: 30px; color: #fff; outline: none; }
-        .send { background: var(--accent); color: #000; border: none; width: 45px; height: 45px; border-radius: 50%; font-weight: bold; cursor: pointer; }
-        .menu-modulos { display: flex; justify-content: space-around; padding-top: 10px; border-top: 1px solid #333; }
-        .btn-modulo { background: none; border: none; color: #aaa; font-size: 11px; cursor: pointer; padding: 4px; }
-        .btn-modulo:hover { color: var(--accent); }
-        #file-input { display: none; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>OIO ONE - V5 PRO</title>
+<link rel="icon" href="icone-512.png">
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--accent:#00f2fe}*{box-sizing:border-box}body{margin:0;background:#000;color:#fff;font-family:sans-serif;height:100dvh;overflow:hidden;display:flex;flex-direction:column}.header-identidade{padding:20px;display:flex;gap:15px;overflow-x:auto;border-bottom:1px solid #222;flex-shrink:0}.user-avatar{width:60px;height:60px;border-radius:50%;border:2px solid var(--accent);background:#111;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}.user-avatar.online:after{content:'';position:absolute;bottom:2px;right:2px;width:12px;height:12px;background:#0f0;border-radius:50%;border:2px solid #000}#area-principal{flex:1;min-height:0;overflow-y:auto;padding:15px 15px 180px;display:flex;flex-direction:column;gap:10px}.balao{padding:12px;border-radius:18px;max-width:80%;font-size:15px;line-height:1.4;border-left:4px solid var(--accent);background:rgba(0,242,254,.05);overflow-wrap:anywhere}.minha{align-self:flex-end;border-left:none;border-right:4px solid #fff;background:rgba(255,255,255,.05)}.status{align-self:center;color:#777;font-size:12px;text-align:center;padding:8px}.gaveta-vidro{position:fixed;z-index:10;bottom:0;left:0;width:100%;background:rgba(20,20,20,.92);backdrop-filter:blur(20px);border-top:1px solid rgba(255,255,255,.1);border-radius:25px 25px 0 0;padding:15px}.input-row{display:flex;gap:10px;align-items:center;margin-bottom:15px}input{min-width:0;flex:1;background:#222;border:none;padding:12px 20px;border-radius:30px;color:#fff;outline:none}.send{background:var(--accent);color:#000;border:0;width:45px;height:45px;border-radius:50%;font-weight:bold}.menu-modulos{display:flex;justify-content:space-around;padding-top:10px;border-top:1px solid #333}.btn-modulo{background:none;border:0;color:#aaa;font-size:11px;cursor:pointer;padding:4px}#file-input{display:none}
+</style>
 </head>
 <body>
-    <div class="header-identidade" id="lista-contatos">
-        <div class="user-avatar online" id="meu-perfil">⭐</div>
-        <div class="user-avatar" id="gabriela" role="button" tabindex="0">G</div>
-    </div>
-
-    <div id="area-principal">
-        <div class="status" id="status">Conectando ao OIO...</div>
-    </div>
-
-    <div class="gaveta-vidro">
-        <div class="input-row">
-            <button class="btn-modulo" id="foto-btn" type="button">📷</button>
-            <input id="msg-input" autocomplete="off" placeholder="Sua vibe...">
-            <button class="send" id="send-btn" type="button">➤</button>
-        </div>
-        <div class="menu-modulos">
-            <button class="btn-modulo" id="chat-btn" type="button">💬<br>CHAT</button>
-            <button class="btn-modulo" id="videos-btn" type="button">🎬<br>VÍDEOS</button>
-            <button class="btn-modulo" id="games-btn" type="button">🕹️<br>ARCADE</button>
-            <button class="btn-modulo" id="call-btn" type="button">📞<br>LIGAR</button>
-        </div>
-    </div>
-
-    <input type="file" id="file-input" accept="image/*">
-    <audio id="som-notifica" preload="auto" src="https://www.soundjay.com/buttons/sounds/button-50.mp3"></audio>
-
-    <script>
-    (() => {
-        'use strict';
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyBG3oBoBvOwySN04gR0CgCCXToZ0G-av60",
-            authDomain: "vibe-app-bbba2.firebaseapp.com",
-            databaseURL: "https://vibe-app-bbba2-default-rtdb.firebaseio.com/",
-            projectId: "vibe-app-bbba2",
-            storageBucket: "vibe-app-bbba2.firebasestorage.app",
-            messagingSenderId: "329513213082",
-            appId: "1:329513213082:web:3938e86538bf8a04a05323"
-        };
-
-        const area = document.getElementById('area-principal');
-        const status = document.getElementById('status');
-        const input = document.getElementById('msg-input');
-        const fileInput = document.getElementById('file-input');
-        const audio = document.getElementById('som-notifica');
-
-        let meuNome = localStorage.getItem('oio_nome');
-        if (!meuNome) {
-            meuNome = window.prompt('Nome OIO ONE:') || 'Michel';
-            localStorage.setItem('oio_nome', meuNome);
-        }
-
-        // Navegação: antes havia chamadas para mudarModulo(), que não existia.
-        document.getElementById('foto-btn').addEventListener('click', () => fileInput.click());
-        document.getElementById('videos-btn').addEventListener('click', () => { window.location.href = 'videos.html'; });
-        document.getElementById('games-btn').addEventListener('click', () => { window.location.href = 'games.html'; });
-        document.getElementById('call-btn').addEventListener('click', () => { window.location.href = 'tel:+5511999999999'; });
-        document.getElementById('chat-btn').addEventListener('click', () => { area.scrollTop = area.scrollHeight; input.focus(); });
-        document.getElementById('gabriela').addEventListener('click', () => alert('Abrindo Gabriela...'));
-
-        // Ativa o áudio após a primeira interação do usuário, sem deixar uma Promise rejeitada quebrar o app.
-        document.addEventListener('pointerdown', () => {
-            audio.play().then(() => { audio.pause(); audio.currentTime = 0; }).catch(() => {});
-        }, { once: true });
-
-        function mostrarStatus(texto) {
-            status.textContent = texto;
-            status.style.display = texto ? 'block' : 'none';
-        }
-
-        function adicionarMensagem(m) {
-            const div = document.createElement('div');
-            div.className = 'balao' + (m.autor === meuNome ? ' minha' : '');
-
-            const autor = document.createElement('strong');
-            autor.textContent = m.autor || 'Usuário';
-            const br = document.createElement('br');
-            const texto = document.createTextNode(m.texto || '');
-
-            div.append(autor, br, texto);
-            area.appendChild(div);
-            area.scrollTop = area.scrollHeight;
-
-            if (m.autor && m.autor !== meuNome) {
-                audio.currentTime = 0;
-                audio.play().catch(() => {});
-            }
-        }
-
-        function enviar() {
-            const texto = input.value.trim();
-            if (!texto) return;
-
-            if (!window.db) {
-                mostrarStatus('Firebase não está conectado.');
-                return;
-            }
-
-            window.db.ref('chat_geral').push({
-                autor: meuNome,
-                texto,
-                data: Date.now()
-            }).then(() => {
-                input.value = '';
-                input.focus();
-            }).catch((erro) => {
-                console.error('Erro ao enviar:', erro);
-                mostrarStatus('Não foi possível enviar a mensagem.');
-            });
-        }
-
-        document.getElementById('send-btn').addEventListener('click', enviar);
-        input.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter') enviar();
-        });
-
-        fileInput.addEventListener('change', () => {
-            if (fileInput.files.length) {
-                mostrarStatus('Upload de imagem ainda não está conectado ao armazenamento.');
-                fileInput.value = '';
-            }
-        });
-
-        // Inicialização protegida: se Firebase falhar, a interface continua funcionando.
-        try {
-            if (!window.firebase) throw new Error('Biblioteca Firebase não carregou.');
-            if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-            window.db = firebase.database();
-
-            const ref = window.db.ref('chat_geral').limitToLast(15);
-            ref.on('value', () => mostrarStatus(''), (erro) => {
-                console.error('Erro Firebase:', erro);
-                mostrarStatus('Firebase recusou a conexão com o banco.');
-            });
-
-            ref.on('child_added', (snap) => {
-                const mensagem = snap.val();
-                if (mensagem) adicionarMensagem(mensagem);
-            }, (erro) => {
-                console.error('Erro ao ler chat_geral:', erro);
-                mostrarStatus('Não foi possível ler o chat.');
-            });
-        } catch (erro) {
-            console.error('Falha ao iniciar Firebase:', erro);
-            mostrarStatus('OIO carregado, mas o Firebase não iniciou.');
-        }
-    })();
-    </script>
+<div class="header-identidade"><div class="user-avatar online">⭐</div><div class="user-avatar" id="gabriela">G</div></div>
+<div id="area-principal"><div class="status" id="status">Conectando ao Turso...</div></div>
+<div class="gaveta-vidro">
+ <div class="input-row"><button class="btn-modulo" id="foto-btn" type="button">📷</button><input id="msg-input" autocomplete="off" placeholder="Sua vibe..."><button class="send" id="send-btn" type="button">➤</button></div>
+ <div class="menu-modulos"><button class="btn-modulo" id="chat-btn">💬<br>CHAT</button><button class="btn-modulo" id="videos-btn">🎬<br>VÍDEOS</button><button class="btn-modulo" id="games-btn">🕹️<br>ARCADE</button><button class="btn-modulo" id="call-btn">📞<br>LIGAR</button></div>
+</div>
+<input type="file" id="file-input" accept="image/*">
+<audio id="som-notifica" preload="auto" src="https://www.soundjay.com/buttons/sounds/button-50.mp3"></audio>
+<script>
+(()=>{
+'use strict';
+const area=document.getElementById('area-principal'),status=document.getElementById('status'),input=document.getElementById('msg-input'),audio=document.getElementById('som-notifica'),fileInput=document.getElementById('file-input');
+const API='/api/chat'; let meuNome=localStorage.getItem('oio_nome'); let ultimoId=0; let carregando=false;
+if(!meuNome){meuNome=prompt('Nome OIO ONE:')||'Michel';localStorage.setItem('oio_nome',meuNome)}
+function mostrarStatus(t){status.textContent=t;status.style.display=t?'block':'none'}
+function mensagem(m,notificar=false){if(document.querySelector(`[data-id="${m.id}"]`))return;const d=document.createElement('div');d.className='balao'+(m.autor===meuNome?' minha':'');d.dataset.id=m.id;const a=document.createElement('strong');a.textContent=m.autor||'Usuário';d.append(a,document.createElement('br'),document.createTextNode(m.texto||''));area.appendChild(d);area.scrollTop=area.scrollHeight;if(notificar&&m.autor!==meuNome){audio.currentTime=0;audio.play().catch(()=>{})}}
+async function carregar(inicial=false){if(carregando)return;carregando=true;try{const url=inicial?`${API}?limit=30`:`${API}?since=${ultimoId}&limit=30`;const r=await fetch(url,{cache:'no-store'});const data=await r.json();if(!r.ok)throw new Error(data.error||'Erro HTTP '+r.status);for(const m of data.messages||[]){mensagem(m,!inicial);ultimoId=Math.max(ultimoId,Number(m.id)||0)}mostrarStatus('')}catch(e){console.error(e);mostrarStatus('Turso não está conectado. Configure os secrets na Vercel.')}finally{carregando=false}}
+async function enviar(){const texto=input.value.trim();if(!texto)return;input.disabled=true;try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({autor:meuNome,texto})});const data=await r.json();if(!r.ok)throw new Error(data.error||'Falha ao enviar');mensagem(data.message);ultimoId=Math.max(ultimoId,Number(data.message.id)||0);input.value='';input.focus()}catch(e){console.error(e);mostrarStatus('Não foi possível enviar. Verifique o Turso/Vercel.')}finally{input.disabled=false}}
+document.getElementById('send-btn').onclick=enviar;input.onkeydown=e=>{if(e.key==='Enter')enviar()};document.getElementById('chat-btn').onclick=()=>{area.scrollTop=area.scrollHeight;input.focus()};document.getElementById('videos-btn').onclick=()=>location.href='videos.html';document.getElementById('games-btn').onclick=()=>location.href='games.html';document.getElementById('call-btn').onclick=()=>location.href='tel:+5511999999999';document.getElementById('gabriela').onclick=()=>alert('Abrindo Gabriela...');document.getElementById('foto-btn').onclick=()=>fileInput.click();fileInput.onchange=()=>{if(fileInput.files.length){mostrarStatus('Upload de imagem será ligado ao Cloudinary nesta próxima etapa.');fileInput.value=''}};document.addEventListener('pointerdown',()=>{audio.play().then(()=>{audio.pause();audio.currentTime=0}).catch(()=>{})},{once:true});
+carregar(true);setInterval(()=>carregar(false),2000);
+})();
+</script>
 </body>
 </html>
