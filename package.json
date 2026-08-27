@@ -1,0 +1,7 @@
+{
+  "name": "projeto-oio-core",
+  "private": true,
+  "dependencies": {
+    "@libsql/client": "^0.15.15"
+  }
+}
