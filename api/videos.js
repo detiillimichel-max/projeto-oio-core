@@ -1,4 +1,5 @@
 import { createClient } from '@libsql/client';
+import crypto from 'node:crypto';
 
 let client;
 
@@ -49,10 +50,48 @@ function isAuthorized(req, body) {
   return getAdminPassword(req, body) === configured;
 }
 
+async function apagarCloudinaryVideo(publicId) {
+  const cloudName = String(process.env.CLOUDINARY_CLOUD_NAME || 'hmnhqfco');
+  const apiKey = String(process.env.CLOUDINARY_API_KEY || '');
+  const apiSecret = String(process.env.CLOUDINARY_API_SECRET || '');
+
+  if (!apiKey || !apiSecret) {
+    throw new Error('CLOUDINARY_API_KEY/CLOUDINARY_API_SECRET não configurados na Vercel.');
+  }
+
+  const timestamp = Math.floor(Date.now() / 1000);
+  const signatureBase = `invalidate=true&public_id=${publicId}&timestamp=${timestamp}`;
+  const signature = crypto.createHash('sha1').update(signatureBase + apiSecret).digest('hex');
+
+  const formData = new URLSearchParams();
+  formData.set('public_id', publicId);
+  formData.set('timestamp', String(timestamp));
+  formData.set('invalidate', 'true');
+  formData.set('api_key', apiKey);
+  formData.set('signature', signature);
+
+  const resposta = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/video/destroy`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: formData
+  });
+
+  const dados = await resposta.json().catch(() => ({}));
+  if (!resposta.ok) {
+    throw new Error(dados?.error?.message || `Cloudinary retornou HTTP ${resposta.status}.`);
+  }
+
+  if (dados.result !== 'ok' && dados.result !== 'not found') {
+    throw new Error('Cloudinary não confirmou a exclusão do vídeo.');
+  }
+
+  return dados.result;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
 
-  if (req.method !== 'GET' && req.method !== 'POST') {
+  if (!['GET', 'POST', 'DELETE'].includes(req.method)) {
     return res.status(405).json({ error: 'Método não permitido.' });
   }
 
@@ -88,7 +127,42 @@ export default async function handler(req, res) {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
 
     if (!isAuthorized(req, body)) {
-      return res.status(401).json({ error: 'Não autorizado para publicar vídeos.' });
+      return res.status(401).json({ error: 'Não autorizado para gerenciar vídeos.' });
+    }
+
+    if (req.method === 'DELETE') {
+      const id = Number(body.id);
+      if (!Number.isInteger(id) || id <= 0) {
+        return res.status(400).json({ error: 'ID do vídeo inválido.' });
+      }
+
+      const result = await db.execute({
+        sql: `SELECT id, public_id FROM videos WHERE id = ? AND status = 'publicado' LIMIT 1`,
+        args: [id]
+      });
+      const video = result.rows[0];
+
+      if (!video) {
+        return res.status(404).json({ error: 'Vídeo não encontrado ou já excluído.' });
+      }
+
+      const publicId = String(video.public_id || '').trim();
+      if (!publicId) {
+        return res.status(400).json({ error: 'O vídeo não possui public_id para exclusão segura.' });
+      }
+
+      const cloudinaryResult = await apagarCloudinaryVideo(publicId);
+
+      await db.execute({
+        sql: `DELETE FROM videos WHERE id = ?`,
+        args: [id]
+      });
+
+      return res.status(200).json({
+        success: true,
+        cloudinary_result: cloudinaryResult,
+        id
+      });
     }
 
     const countResult = await db.execute(`
@@ -145,7 +219,7 @@ export default async function handler(req, res) {
   } catch (error) {
     console.error('Turso videos error:', error);
     return res.status(500).json({
-      error: 'Falha no banco Turso.',
+      error: 'Falha no gerenciamento de vídeos.',
       detail: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
