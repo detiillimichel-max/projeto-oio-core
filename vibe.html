@@ -74,9 +74,9 @@
 
             <label class="description-label" for="video-description">
                 <span>Descrição</span>
-                <span id="description-counter">0/30</span>
+                <span id="description-counter">0/100</span>
             </label>
-            <textarea id="video-description" maxlength="30" placeholder="Escreva uma descrição curta..." disabled></textarea>
+            <textarea id="video-description" maxlength="100" placeholder="Escreva uma descrição curta..." disabled></textarea>
             <div class="post-error" id="post-error" role="alert"></div>
 
             <button class="post-publish" id="post-publish" type="button" disabled onclick="publicarNoCloudinary()">PUBLICAR VÍDEO</button>
@@ -180,7 +180,7 @@
             meta.classList.remove('show');
             description.value = '';
             description.disabled = true;
-            counter.textContent = '0/30';
+            counter.textContent = '0/100';
             publishBtn.disabled = true;
             publishBtn.textContent = 'PUBLICAR VÍDEO';
             errorBox.textContent = '';
@@ -230,8 +230,8 @@
         document.getElementById('video-gallery-input').addEventListener('change', e => selecionarVideo(e.target.files[0]));
 
         description.addEventListener('input', () => {
-            counter.textContent = description.value.length + '/30';
-            description.classList.toggle('invalid', description.value.length > 30);
+            counter.textContent = description.value.length + '/100';
+            description.classList.toggle('invalid', description.value.length > 100);
         });
 
         async function publicarNoCloudinary() {
@@ -256,8 +256,8 @@
                 errorBox.textContent = 'O vídeo precisa ter no máximo 30 segundos.';
                 return;
             }
-            if (texto.length > 30) {
-                errorBox.textContent = 'A descrição pode ter no máximo 30 caracteres.';
+            if (texto.length > 100) {
+                errorBox.textContent = 'A descrição pode ter no máximo 100 caracteres.';
                 return;
             }
 
