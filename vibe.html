@@ -6,7 +6,6 @@
     <title>OIO VÍDEOS - TIKTOK</title>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
     <style>
         :root { --oio-bg: #000; --oio-surface: #121319; --oio-accent: #C4C4C4; --oio-text: #241f1a; }
         * { box-sizing: border-box; }
@@ -17,8 +16,6 @@
         .info-video { padding: 20px; position: absolute; bottom: 100px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); width: 100%; }
         .btn-postar { position: fixed; bottom: 80px; right: 20px; background: #C4C4C4; color: #241f1a; border: none; padding: 15px 25px; border-radius: 30px; font-weight: bold; z-index: 10; cursor: pointer; }
         .btn-voltar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.1); border: 1px solid #333; color: #fff; padding: 10px 25px; border-radius: 20px; z-index: 10; cursor: pointer; }
-
-        /* PAINEL DE POSTAGEM — somente front-end nesta etapa */
         .post-overlay { position: fixed; inset: 0; z-index: 50; display: none; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.72); backdrop-filter: blur(5px); }
         .post-overlay.open { display: flex; }
         .post-panel { width: min(100%, 520px); max-height: 92vh; overflow-y: auto; background: #121319; border: 1px solid #303139; border-radius: 26px 26px 0 0; padding: 20px; box-shadow: 0 -15px 50px rgba(0,0,0,.45); }
@@ -39,6 +36,7 @@
         #video-description:focus { border-color: #C4C4C4; }
         #video-description.invalid { border-color: #d96b6b; }
         .post-error { min-height: 20px; margin: 8px 0; color: #ff9b9b; font-size: 12px; }
+        .post-error.success { color: #b9d9b9; }
         .post-publish { width: 100%; background: #C4C4C4; color: #241f1a; }
         .post-publish:disabled { opacity: .45; cursor: not-allowed; }
         .post-note { margin: 10px 2px 0; color: #888; font-size: 11px; line-height: 1.4; text-align: center; }
@@ -46,9 +44,7 @@
     </style>
 </head>
 <body>
-
     <div class="feed-tiktok" id="feed"></div>
-
     <button class="btn-postar" onclick="abrirPostagem()">＋ POSTAR VÍDEO</button>
     <button class="btn-voltar" onclick="window.location.href='teste.html'">❮ VOLTAR AO CHAT</button>
 
@@ -83,8 +79,8 @@
             <textarea id="video-description" maxlength="30" placeholder="Escreva uma descrição curta..." disabled></textarea>
             <div class="post-error" id="post-error" role="alert"></div>
 
-            <button class="post-publish" id="post-publish" type="button" disabled onclick="prepararPublicacao()">PUBLICAR VÍDEO</button>
-            <p class="post-note">Nesta etapa, o vídeo fica apenas preparado no front-end. A próxima etapa conecta a publicação ao Cloudinary + Turso.</p>
+            <button class="post-publish" id="post-publish" type="button" disabled onclick="publicarNoCloudinary()">PUBLICAR VÍDEO</button>
+            <p class="post-note">Vídeos válidos são enviados ao Cloudinary em oio-core/videos. O Turso será conectado na próxima etapa.</p>
         </section>
     </div>
 
@@ -100,6 +96,10 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+
+        const CLOUDINARY_CLOUD_NAME = 'hmnhqfco';
+        const CLOUDINARY_VIDEO_PRESET = 'oio_core_videos_upload';
+        const CLOUDINARY_VIDEO_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`;
 
         const feed = document.getElementById('feed');
         const overlay = document.getElementById('post-overlay');
@@ -118,12 +118,12 @@
         const MAX_SIZE_BYTES = 30 * 1024 * 1024;
         let videoSelecionado = null;
         let videoObjectUrl = null;
+        let publicando = false;
 
-        // MEMÓRIA: volta para onde o usuário parou.
         feed.onscroll = () => localStorage.setItem('vibe_posicao', feed.scrollTop);
         window.addEventListener('load', () => feed.scrollTop = Number(localStorage.getItem('vibe_posicao') || 0));
 
-        // FEED LEGADO: permanece somente como leitura nesta etapa.
+        // Feed legado permanece somente como leitura até a integração Turso.
         db.ref('feed_tiktok').on('value', snap => {
             feed.innerHTML = '';
             snap.forEach(item => {
@@ -152,6 +152,7 @@
 
         function abrirPostagem() {
             errorBox.textContent = '';
+            errorBox.classList.remove('success');
             const quantidade = feed.querySelectorAll('.video-card').length;
             if (quantidade >= MAX_VIDEOS) {
                 alert('O limite de 10 vídeos já foi atingido.');
@@ -162,6 +163,7 @@
         }
 
         function fecharPostagem() {
+            if (publicando) return;
             overlay.classList.remove('open');
             overlay.setAttribute('aria-hidden', 'true');
             limparSelecao();
@@ -180,7 +182,9 @@
             description.disabled = true;
             counter.textContent = '0/30';
             publishBtn.disabled = true;
+            publishBtn.textContent = 'PUBLICAR VÍDEO';
             errorBox.textContent = '';
+            errorBox.classList.remove('success');
         }
 
         function selecionarVideo(file) {
@@ -230,11 +234,12 @@
             description.classList.toggle('invalid', description.value.length > 30);
         });
 
-        function prepararPublicacao() {
+        async function publicarNoCloudinary() {
             const quantidade = feed.querySelectorAll('.video-card').length;
             const texto = description.value.trim();
             const duracao = Number(preview.duration || 0);
 
+            if (publicando) return;
             if (quantidade >= MAX_VIDEOS) {
                 errorBox.textContent = 'O limite de 10 vídeos já foi atingido.';
                 return;
@@ -256,7 +261,53 @@
                 return;
             }
 
-            errorBox.textContent = 'Front-end validado. Próxima etapa: enviar este arquivo ao Cloudinary e salvar os dados no Turso.';
+            publicando = true;
+            publishBtn.disabled = true;
+            publishBtn.textContent = 'ENVIANDO...';
+            errorBox.classList.remove('success');
+            errorBox.textContent = 'Enviando vídeo ao Cloudinary...';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', videoSelecionado);
+                formData.append('upload_preset', CLOUDINARY_VIDEO_PRESET);
+
+                const resposta = await fetch(CLOUDINARY_VIDEO_UPLOAD_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const dados = await resposta.json().catch(() => ({}));
+                if (!resposta.ok) {
+                    throw new Error(dados?.error?.message || 'Cloudinary retornou HTTP ' + resposta.status);
+                }
+                if (!dados.secure_url || !dados.public_id) {
+                    throw new Error('Cloudinary não retornou os dados esperados do vídeo.');
+                }
+
+                window.oioUltimoVideoCloudinary = {
+                    url: dados.secure_url,
+                    publicId: dados.public_id,
+                    resourceType: dados.resource_type || 'video',
+                    format: dados.format || '',
+                    bytes: Number(dados.bytes) || videoSelecionado.size,
+                    duration: Number(dados.duration) || duracao,
+                    descricao: texto,
+                    autor: localStorage.getItem('oio_nome') || 'Michel'
+                };
+
+                errorBox.classList.add('success');
+                errorBox.textContent = '✓ Vídeo enviado ao Cloudinary com sucesso. Agora vamos conferir em oio-core/videos.';
+                publishBtn.textContent = 'ENVIADO AO CLOUDINARY';
+            } catch (erro) {
+                console.error('Erro Cloudinary:', erro);
+                errorBox.classList.remove('success');
+                errorBox.textContent = 'Não foi possível enviar ao Cloudinary: ' + (erro.message || 'erro desconhecido');
+                publishBtn.disabled = false;
+                publishBtn.textContent = 'PUBLICAR VÍDEO';
+            } finally {
+                publicando = false;
+            }
         }
 
         function formatarDuracao(segundos) {
