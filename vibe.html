@@ -117,7 +117,8 @@
             video.src = v.url || '';
             video.loop = true;
             video.playsInline = true;
-            video.muted = true;
+            video.muted = false;
+            video.volume = 1;
             video.onclick = () => video.paused ? video.play() : video.pause();
             const info = document.createElement('div');
             info.className = 'info-video';
