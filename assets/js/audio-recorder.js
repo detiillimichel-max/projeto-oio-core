@@ -53,22 +53,33 @@
 
     const data = await response.json();
 
-    if (!response.ok) {
+    if (!response.ok || !data.secure_url) {
       throw new Error(data.error?.message || `Cloudinary HTTP ${response.status}`);
     }
 
     return data;
   }
 
+  function limparPreview() {
+    const oldPreview = status.querySelector('.audio-preview');
+    oldPreview?.remove();
+  }
+
   function mostrarPreview(url) {
-    const audio = new Audio(url);
+    limparPreview();
+
+    const audio = document.createElement('audio');
     audio.controls = true;
     audio.preload = 'metadata';
     audio.className = 'audio-preview';
+    audio.src = url;
+    audio.style.display = 'block';
+    audio.style.width = 'min(100%, 320px)';
+    audio.style.height = '38px';
+    audio.style.margin = '8px auto 0';
 
-    const oldPreview = document.querySelector('.audio-preview');
-    oldPreview?.remove();
-    document.querySelector('.input-row')?.appendChild(audio);
+    status.appendChild(audio);
+    status.style.display = 'block';
   }
 
   async function processarGravacao(blob) {
@@ -78,15 +89,27 @@
     try {
       const data = await enviarCloudinary(blob);
 
-      // Depois do upload, o preview passa a usar a URL entregue pelo Cloudinary.
       if (data.secure_url) {
         mostrarPreview(data.secure_url);
       }
 
-      setStatus('Áudio enviado ao Cloudinary.');
-      console.log('Cloudinary audio upload:', data.secure_url);
+      // Deixa o áudio pronto para o botão ENVIAR do composer.
+      window.oioPendingAudio = {
+        url: data.secure_url,
+        publicId: data.public_id || null,
+        resourceType: data.resource_type || 'video',
+        format: data.format || null,
+        duration: data.duration || null,
+        mimeType: blob.type || null
+      };
+
+      setStatus('Áudio pronto. Toque no botão ➤ para enviar ao chat.');
+      window.dispatchEvent(new CustomEvent('oio:audio-ready', {
+        detail: window.oioPendingAudio
+      }));
     } catch (error) {
       console.error('Erro no upload para Cloudinary:', error);
+      window.oioPendingAudio = null;
       setStatus('Áudio gravado, mas não foi enviado ao Cloudinary.');
     } finally {
       URL.revokeObjectURL(localUrl);
