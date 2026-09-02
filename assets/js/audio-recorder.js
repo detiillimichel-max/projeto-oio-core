@@ -6,6 +6,12 @@
 
   if (!button || !status) return;
 
+  // Cloudinary: estes dois valores são públicos em uploads unsigned.
+  // A API Secret NÃO é usada no frontend.
+  const CLOUDINARY_CLOUD_NAME = 'hmnhqfco';
+  const CLOUDINARY_UPLOAD_PRESET = 'oio_core_audio';
+  const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`;
+
   let recorder = null;
   let chunks = [];
   let stream = null;
@@ -23,6 +29,68 @@
       'audio/ogg;codecs=opus'
     ];
     return options.find(type => MediaRecorder.isTypeSupported(type)) || '';
+  }
+
+  function extensionFromMime(type = '') {
+    if (type.includes('mp4')) return 'm4a';
+    if (type.includes('ogg')) return 'ogg';
+    if (type.includes('webm')) return 'webm';
+    return 'audio';
+  }
+
+  async function enviarCloudinary(blob) {
+    setStatus('Enviando áudio ao Cloudinary...');
+
+    const formData = new FormData();
+    const extension = extensionFromMime(blob.type);
+    formData.append('file', blob, `oio-audio-${Date.now()}.${extension}`);
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+    const response = await fetch(CLOUDINARY_UPLOAD_URL, {
+      method: 'POST',
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error?.message || `Cloudinary HTTP ${response.status}`);
+    }
+
+    return data;
+  }
+
+  function mostrarPreview(url) {
+    const audio = new Audio(url);
+    audio.controls = true;
+    audio.preload = 'metadata';
+    audio.className = 'audio-preview';
+
+    const oldPreview = document.querySelector('.audio-preview');
+    oldPreview?.remove();
+    document.querySelector('.input-row')?.appendChild(audio);
+  }
+
+  async function processarGravacao(blob) {
+    const localUrl = URL.createObjectURL(blob);
+    mostrarPreview(localUrl);
+
+    try {
+      const data = await enviarCloudinary(blob);
+
+      // Depois do upload, o preview passa a usar a URL entregue pelo Cloudinary.
+      if (data.secure_url) {
+        mostrarPreview(data.secure_url);
+      }
+
+      setStatus('Áudio enviado ao Cloudinary.');
+      console.log('Cloudinary audio upload:', data.secure_url);
+    } catch (error) {
+      console.error('Erro no upload para Cloudinary:', error);
+      setStatus('Áudio gravado, mas não foi enviado ao Cloudinary.');
+    } finally {
+      URL.revokeObjectURL(localUrl);
+    }
   }
 
   async function iniciarGravacao() {
@@ -43,20 +111,7 @@
 
       recorder.onstop = () => {
         const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
-        const url = URL.createObjectURL(blob);
-
-        // Fase 1: apenas captura e valida o áudio.
-        // O upload para Cloudinary será ligado depois que o Upload Preset
-        // do OIO Core estiver configurado. O Firebase não é tocado aqui.
-        const audio = new Audio(url);
-        audio.controls = true;
-        audio.preload = 'metadata';
-        audio.className = 'audio-preview';
-
-        const oldPreview = document.querySelector('.audio-preview');
-        oldPreview?.remove();
-        document.querySelector('.input-row')?.appendChild(audio);
-        setStatus('Áudio gravado. Próxima etapa: enviar ao Cloudinary.');
+        processarGravacao(blob);
 
         stream?.getTracks().forEach(track => track.stop());
         stream = null;
