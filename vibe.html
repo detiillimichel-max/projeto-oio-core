@@ -54,33 +54,19 @@
                 <h2 id="post-title">Postar vídeo</h2>
                 <button class="post-close" type="button" onclick="fecharPostagem()" aria-label="Fechar">×</button>
             </div>
-
             <div class="video-picker">
                 <button type="button" onclick="document.getElementById('video-camera-input').click()">Câmera</button>
                 <button type="button" onclick="document.getElementById('video-gallery-input').click()">Escolher vídeo</button>
             </div>
-
             <input id="video-camera-input" type="file" accept="video/*" capture="environment">
             <input id="video-gallery-input" type="file" accept="video/mp4,video/webm,video/quicktime,video/*">
-
-            <div class="preview-wrap" id="preview-wrap">
-                <video id="video-preview" controls playsinline></video>
-            </div>
-
-            <div class="video-meta" id="video-meta">
-                <span id="video-duration">Duração: —</span>
-                <span id="video-size">Tamanho: —</span>
-            </div>
-
-            <label class="description-label" for="video-description">
-                <span>Descrição</span>
-                <span id="description-counter">0/100</span>
-            </label>
+            <div class="preview-wrap" id="preview-wrap"><video id="video-preview" controls playsinline></video></div>
+            <div class="video-meta" id="video-meta"><span id="video-duration">Duração: —</span><span id="video-size">Tamanho: —</span></div>
+            <label class="description-label" for="video-description"><span>Descrição</span><span id="description-counter">0/100</span></label>
             <textarea id="video-description" maxlength="100" placeholder="Escreva uma descrição curta..." disabled></textarea>
             <div class="post-error" id="post-error" role="alert"></div>
-
             <button class="post-publish" id="post-publish" type="button" disabled onclick="publicarNoCloudinary()">PUBLICAR VÍDEO</button>
-            <p class="post-note">Vídeos válidos são enviados ao Cloudinary em oio-core/videos. O Turso será conectado na próxima etapa.</p>
+            <p class="post-note">Vídeos válidos são enviados ao Cloudinary em oio-core/videos e registrados no Turso.</p>
         </section>
     </div>
 
@@ -100,6 +86,7 @@
         const CLOUDINARY_CLOUD_NAME = 'hmnhqfco';
         const CLOUDINARY_VIDEO_PRESET = 'oio_core_videos_upload';
         const CLOUDINARY_VIDEO_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`;
+        const VIDEOS_API_URL = '/api/videos';
 
         const feed = document.getElementById('feed');
         const overlay = document.getElementById('post-overlay');
@@ -121,43 +108,59 @@
         let publicando = false;
 
         feed.onscroll = () => localStorage.setItem('vibe_posicao', feed.scrollTop);
-        window.addEventListener('load', () => feed.scrollTop = Number(localStorage.getItem('vibe_posicao') || 0));
+        window.addEventListener('load', () => { feed.scrollTop = Number(localStorage.getItem('vibe_posicao') || 0); carregarFeed(); });
 
-        // Feed legado permanece somente como leitura até a integração Turso.
-        db.ref('feed_tiktok').on('value', snap => {
+        function criarCard(v) {
+            const card = document.createElement('div');
+            card.className = 'video-card';
+            const video = document.createElement('video');
+            video.src = v.url || '';
+            video.loop = true;
+            video.playsInline = true;
+            video.muted = true;
+            video.onclick = () => video.paused ? video.play() : video.pause();
+            const info = document.createElement('div');
+            info.className = 'info-video';
+            const author = document.createElement('strong');
+            author.textContent = '@' + (v.autor || 'Usuário');
+            info.appendChild(author);
+            if (v.descricao) { info.appendChild(document.createElement('br')); info.appendChild(document.createTextNode(v.descricao)); }
+            card.append(video, info);
+            return card;
+        }
+
+        async function carregarFeed() {
+            let videosTurso = [];
+            try {
+                const resposta = await fetch(VIDEOS_API_URL, { cache: 'no-store' });
+                if (!resposta.ok) throw new Error('API HTTP ' + resposta.status);
+                const dados = await resposta.json();
+                videosTurso = Array.isArray(dados.videos) ? dados.videos : [];
+            } catch (erro) {
+                console.warn('Feed Turso indisponível:', erro);
+            }
+
             feed.innerHTML = '';
-            snap.forEach(item => {
-                const v = item.val();
-                const card = document.createElement('div');
-                card.className = 'video-card';
-                const video = document.createElement('video');
-                video.src = v.url || '';
-                video.loop = true;
-                video.playsInline = true;
-                video.muted = true;
-                video.onclick = () => video.paused ? video.play() : video.pause();
-                const info = document.createElement('div');
-                info.className = 'info-video';
-                const author = document.createElement('strong');
-                author.textContent = '@' + (v.autor || 'Usuário');
-                info.appendChild(author);
-                if (v.descricao) {
-                    info.appendChild(document.createElement('br'));
-                    info.appendChild(document.createTextNode(v.descricao));
-                }
-                card.append(video, info);
-                feed.appendChild(card);
-            });
-        });
+            videosTurso.forEach(v => feed.appendChild(criarCard(v)));
+
+            // Leitura legada preservada: Firebase continua somente como fonte de vídeos antigos.
+            try {
+                await new Promise(resolve => {
+                    db.ref('feed_tiktok').once('value', snap => {
+                        snap.forEach(item => feed.appendChild(criarCard(item.val())));
+                        resolve();
+                    }, () => resolve());
+                });
+            } catch (erro) {
+                console.warn('Feed legado indisponível:', erro);
+            }
+        }
 
         function abrirPostagem() {
             errorBox.textContent = '';
             errorBox.classList.remove('success');
             const quantidade = feed.querySelectorAll('.video-card').length;
-            if (quantidade >= MAX_VIDEOS) {
-                alert('O limite de 10 vídeos já foi atingido.');
-                return;
-            }
+            if (quantidade >= MAX_VIDEOS) { alert('O limite de 10 vídeos já foi atingido. O limite definitivo também é validado pelo servidor.'); return; }
             overlay.classList.add('open');
             overlay.setAttribute('aria-hidden', 'false');
         }
@@ -191,36 +194,19 @@
             if (!file) return;
             limparSelecao();
             errorBox.textContent = '';
-
-            if (!file.type.startsWith('video/')) {
-                errorBox.textContent = 'Escolha um arquivo de vídeo válido.';
-                return;
-            }
-            if (file.size > MAX_SIZE_BYTES) {
-                errorBox.textContent = 'Este vídeo ultrapassa o limite de 30 MB.';
-                return;
-            }
-
+            if (!file.type.startsWith('video/')) { errorBox.textContent = 'Escolha um arquivo de vídeo válido.'; return; }
+            if (file.size > MAX_SIZE_BYTES) { errorBox.textContent = 'Este vídeo ultrapassa o limite de 30 MB.'; return; }
             videoSelecionado = file;
             videoObjectUrl = URL.createObjectURL(file);
             preview.src = videoObjectUrl;
             previewWrap.classList.add('show');
             meta.classList.add('show');
             sizeLabel.textContent = 'Tamanho: ' + formatarTamanho(file.size);
-
             preview.onloadedmetadata = () => {
                 const duracao = Number(preview.duration || 0);
                 durationLabel.textContent = 'Duração: ' + formatarDuracao(duracao);
-                if (!Number.isFinite(duracao) || duracao <= 0) {
-                    errorBox.textContent = 'Não foi possível identificar a duração do vídeo.';
-                    return;
-                }
-                if (duracao > MAX_DURATION_SECONDS) {
-                    errorBox.textContent = 'O vídeo precisa ter no máximo 30 segundos.';
-                    description.disabled = true;
-                    publishBtn.disabled = true;
-                    return;
-                }
+                if (!Number.isFinite(duracao) || duracao <= 0) { errorBox.textContent = 'Não foi possível identificar a duração do vídeo.'; return; }
+                if (duracao > MAX_DURATION_SECONDS) { errorBox.textContent = 'O vídeo precisa ter no máximo 30 segundos.'; description.disabled = true; publishBtn.disabled = true; return; }
                 description.disabled = false;
                 publishBtn.disabled = false;
             };
@@ -228,7 +214,6 @@
 
         document.getElementById('video-camera-input').addEventListener('change', e => selecionarVideo(e.target.files[0]));
         document.getElementById('video-gallery-input').addEventListener('change', e => selecionarVideo(e.target.files[0]));
-
         description.addEventListener('input', () => {
             counter.textContent = description.value.length + '/100';
             description.classList.toggle('invalid', description.value.length > 100);
@@ -238,28 +223,15 @@
             const quantidade = feed.querySelectorAll('.video-card').length;
             const texto = description.value.trim();
             const duracao = Number(preview.duration || 0);
-
             if (publicando) return;
-            if (quantidade >= MAX_VIDEOS) {
-                errorBox.textContent = 'O limite de 10 vídeos já foi atingido.';
-                return;
-            }
-            if (!videoSelecionado) {
-                errorBox.textContent = 'Escolha um vídeo primeiro.';
-                return;
-            }
-            if (videoSelecionado.size > MAX_SIZE_BYTES) {
-                errorBox.textContent = 'Este vídeo ultrapassa o limite de 30 MB.';
-                return;
-            }
-            if (!Number.isFinite(duracao) || duracao <= 0 || duracao > MAX_DURATION_SECONDS) {
-                errorBox.textContent = 'O vídeo precisa ter no máximo 30 segundos.';
-                return;
-            }
-            if (texto.length > 100) {
-                errorBox.textContent = 'A descrição pode ter no máximo 100 caracteres.';
-                return;
-            }
+            if (quantidade >= MAX_VIDEOS) { errorBox.textContent = 'O limite de 10 vídeos já foi atingido.'; return; }
+            if (!videoSelecionado) { errorBox.textContent = 'Escolha um vídeo primeiro.'; return; }
+            if (videoSelecionado.size > MAX_SIZE_BYTES) { errorBox.textContent = 'Este vídeo ultrapassa o limite de 30 MB.'; return; }
+            if (!Number.isFinite(duracao) || duracao <= 0 || duracao > MAX_DURATION_SECONDS) { errorBox.textContent = 'O vídeo precisa ter no máximo 30 segundos.'; return; }
+            if (texto.length > 100) { errorBox.textContent = 'A descrição pode ter no máximo 100 caracteres.'; return; }
+
+            const adminPassword = prompt('Senha de administrador para publicar o vídeo:');
+            if (adminPassword === null || adminPassword === '') { errorBox.textContent = 'Publicação cancelada.'; return; }
 
             publicando = true;
             publishBtn.disabled = true;
@@ -271,38 +243,37 @@
                 const formData = new FormData();
                 formData.append('file', videoSelecionado);
                 formData.append('upload_preset', CLOUDINARY_VIDEO_PRESET);
+                const respostaCloudinary = await fetch(CLOUDINARY_VIDEO_UPLOAD_URL, { method: 'POST', body: formData });
+                const dados = await respostaCloudinary.json().catch(() => ({}));
+                if (!respostaCloudinary.ok) throw new Error(dados?.error?.message || 'Cloudinary retornou HTTP ' + respostaCloudinary.status);
+                if (!dados.secure_url || !dados.public_id) throw new Error('Cloudinary não retornou os dados esperados do vídeo.');
 
-                const resposta = await fetch(CLOUDINARY_VIDEO_UPLOAD_URL, {
+                errorBox.textContent = 'Cloudinary OK. Registrando vídeo no Turso...';
+                const respostaApi = await fetch(VIDEOS_API_URL, {
                     method: 'POST',
-                    body: formData
+                    headers: { 'Content-Type': 'application/json', 'x-oio-video-admin': adminPassword },
+                    body: JSON.stringify({
+                        url: dados.secure_url,
+                        public_id: dados.public_id,
+                        descricao: texto,
+                        autor: localStorage.getItem('oio_nome') || 'Michel',
+                        duracao: Number(dados.duration) || duracao,
+                        tamanho: Number(dados.bytes) || videoSelecionado.size,
+                        formato: dados.format || ''
+                    })
                 });
-
-                const dados = await resposta.json().catch(() => ({}));
-                if (!resposta.ok) {
-                    throw new Error(dados?.error?.message || 'Cloudinary retornou HTTP ' + resposta.status);
-                }
-                if (!dados.secure_url || !dados.public_id) {
-                    throw new Error('Cloudinary não retornou os dados esperados do vídeo.');
-                }
-
-                window.oioUltimoVideoCloudinary = {
-                    url: dados.secure_url,
-                    publicId: dados.public_id,
-                    resourceType: dados.resource_type || 'video',
-                    format: dados.format || '',
-                    bytes: Number(dados.bytes) || videoSelecionado.size,
-                    duration: Number(dados.duration) || duracao,
-                    descricao: texto,
-                    autor: localStorage.getItem('oio_nome') || 'Michel'
-                };
+                const apiDados = await respostaApi.json().catch(() => ({}));
+                if (!respostaApi.ok) throw new Error(apiDados?.error || 'API de vídeos retornou HTTP ' + respostaApi.status);
 
                 errorBox.classList.add('success');
-                errorBox.textContent = '✓ Vídeo enviado ao Cloudinary com sucesso. Agora vamos conferir em oio-core/videos.';
-                publishBtn.textContent = 'ENVIADO AO CLOUDINARY';
+                errorBox.textContent = '✓ Vídeo publicado no Cloudinary e registrado no Turso.';
+                publishBtn.textContent = 'VÍDEO PUBLICADO';
+                await carregarFeed();
+                setTimeout(() => fecharPostagem(), 700);
             } catch (erro) {
-                console.error('Erro Cloudinary:', erro);
+                console.error('Erro na publicação:', erro);
                 errorBox.classList.remove('success');
-                errorBox.textContent = 'Não foi possível enviar ao Cloudinary: ' + (erro.message || 'erro desconhecido');
+                errorBox.textContent = 'Não foi possível publicar: ' + (erro.message || 'erro desconhecido');
                 publishBtn.disabled = false;
                 publishBtn.textContent = 'PUBLICAR VÍDEO';
             } finally {
@@ -311,19 +282,17 @@
         }
 
         function formatarDuracao(segundos) {
-            const total = Math.floor(segundos);
-            const min = Math.floor(total / 60);
-            const seg = String(total % 60).padStart(2, '0');
-            return min + ':' + seg;
+            const total = Math.max(0, Math.floor(Number(segundos) || 0));
+            const minutos = Math.floor(total / 60);
+            const segundosRestantes = total % 60;
+            return minutos + ':' + String(segundosRestantes).padStart(2, '0');
         }
 
         function formatarTamanho(bytes) {
-            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+            const total = Number(bytes) || 0;
+            if (total < 1024 * 1024) return Math.max(1, Math.round(total / 1024)) + ' KB';
+            return (total / (1024 * 1024)).toFixed(1) + ' MB';
         }
-
-        overlay.addEventListener('click', e => {
-            if (e.target === overlay) fecharPostagem();
-        });
     </script>
 </body>
 </html>
