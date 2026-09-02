@@ -42,7 +42,7 @@
   }
 
   function formatTime(seconds) {
-    const total = Math.max(0, Math.floor(seconds));
+    const total = Math.max(0, Math.floor(seconds || 0));
     const min = Math.floor(total / 60);
     const sec = String(total % 60).padStart(2, '0');
     return `${min}:${sec}`;
@@ -236,4 +236,127 @@
   window.addEventListener('oio:audio-cancelled', () => {
     if (sendButton) sendButton.setAttribute('aria-label', 'Enviar mensagem');
   });
+
+  // Player próprio do OIO para os áudios já enviados.
+  // Evita o controle nativo do navegador, que aparece diferente em cada Android.
+  function instalarPlayerOio() {
+    if (document.getElementById('oio-audio-player-style')) return;
+
+    const style = document.createElement('style');
+    style.id = 'oio-audio-player-style';
+    style.textContent = `
+      .oio-audio-player{display:flex;align-items:center;gap:9px;width:min(320px,100%);min-height:52px;margin-top:8px;padding:7px 9px;border:1px solid rgba(36,31,26,.14);border-radius:16px;background:rgba(255,253,249,.72)}
+      .oio-audio-player .oio-play{width:38px;height:38px;flex:0 0 38px;border:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--surface,#968F83);color:#fff;cursor:pointer}
+      .oio-audio-player .oio-play svg{width:18px;height:18px;stroke-width:2.4}
+      .oio-audio-player .oio-progress{flex:1;min-width:45px;accent-color:var(--surface,#968F83);cursor:pointer}
+      .oio-audio-player .oio-time{min-width:42px;text-align:right;font-size:11px;color:var(--muted,#625c54);font-variant-numeric:tabular-nums}
+      .oio-audio-player.oio-error .oio-time{color:#8b2f2f}
+      .oio-audio-hidden{display:none!important}
+    `;
+    document.head.appendChild(style);
+  }
+
+  function criarPlayerEnviado(audio) {
+    if (!audio?.src || audio.dataset.oioPlayerReady === '1') return;
+    audio.dataset.oioPlayerReady = '1';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'oio-audio-player';
+    wrap.setAttribute('role', 'group');
+    wrap.setAttribute('aria-label', 'Reprodução de áudio');
+
+    const play = document.createElement('button');
+    play.type = 'button';
+    play.className = 'oio-play';
+    play.setAttribute('aria-label', 'Reproduzir áudio');
+
+    const icon = document.createElement('i');
+    icon.setAttribute('data-lucide', 'play');
+    play.appendChild(icon);
+
+    const progress = document.createElement('input');
+    progress.type = 'range';
+    progress.className = 'oio-progress';
+    progress.min = '0';
+    progress.max = '0';
+    progress.step = '0.1';
+    progress.value = '0';
+    progress.setAttribute('aria-label', 'Posição do áudio');
+
+    const time = document.createElement('span');
+    time.className = 'oio-time';
+    time.textContent = '0:00';
+
+    wrap.append(play, progress, time);
+    audio.classList.add('oio-audio-hidden');
+    audio.controls = false;
+    audio.preload = 'metadata';
+    audio.parentNode.insertBefore(wrap, audio);
+
+    const setIcon = playing => {
+      icon.setAttribute('data-lucide', playing ? 'pause' : 'play');
+      play.setAttribute('aria-label', playing ? 'Pausar áudio' : 'Reproduzir áudio');
+      atualizarIcones();
+    };
+
+    play.addEventListener('click', async () => {
+      document.querySelectorAll('.balao audio').forEach(other => {
+        if (other !== audio) other.pause();
+      });
+      if (audio.paused) {
+        try {
+          await audio.play();
+        } catch (error) {
+          console.error('Erro ao reproduzir áudio OIO:', error);
+          time.textContent = 'Erro';
+          wrap.classList.add('oio-error');
+        }
+      } else {
+        audio.pause();
+      }
+    });
+
+    progress.addEventListener('input', () => {
+      if (Number.isFinite(audio.duration)) audio.currentTime = Number(progress.value);
+    });
+
+    audio.addEventListener('loadedmetadata', () => {
+      if (Number.isFinite(audio.duration)) {
+        progress.max = String(audio.duration);
+        time.textContent = formatTime(audio.duration);
+      }
+    });
+
+    audio.addEventListener('timeupdate', () => {
+      if (Number.isFinite(audio.duration)) progress.value = String(audio.currentTime);
+      time.textContent = `${formatTime(audio.currentTime)} / ${formatTime(audio.duration)}`;
+    });
+
+    audio.addEventListener('play', () => setIcon(true));
+    audio.addEventListener('pause', () => setIcon(false));
+    audio.addEventListener('ended', () => {
+      progress.value = '0';
+      audio.currentTime = 0;
+      time.textContent = formatTime(audio.duration);
+      setIcon(false);
+    });
+    audio.addEventListener('error', () => {
+      wrap.classList.add('oio-error');
+      time.textContent = 'Erro';
+    });
+
+    atualizarIcones();
+  }
+
+  function converterPlayers() {
+    instalarPlayerOio();
+    document.querySelectorAll('.balao audio').forEach(criarPlayerEnviado);
+  }
+
+  instalarPlayerOio();
+  converterPlayers();
+  const area = document.getElementById('area-principal');
+  if (area) {
+    new MutationObserver(converterPlayers).observe(area, { childList: true, subtree: true });
+  }
 })();
