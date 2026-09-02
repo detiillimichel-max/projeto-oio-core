@@ -18,10 +18,30 @@ async function ensureSchema(db) {
     CREATE TABLE IF NOT EXISTS chat_geral (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       autor TEXT NOT NULL,
-      texto TEXT NOT NULL,
-      data INTEGER NOT NULL
+      texto TEXT NOT NULL DEFAULT '',
+      data INTEGER NOT NULL,
+      media_url TEXT,
+      media_public_id TEXT,
+      media_type TEXT,
+      media_duration REAL
     )
   `);
+
+  const columns = await db.execute(`PRAGMA table_info(chat_geral)`);
+  const existing = new Set(columns.rows.map(row => String(row.name)));
+
+  const additions = [
+    ['media_url', 'TEXT'],
+    ['media_public_id', 'TEXT'],
+    ['media_type', 'TEXT'],
+    ['media_duration', 'REAL']
+  ];
+
+  for (const [name, type] of additions) {
+    if (!existing.has(name)) {
+      await db.execute(`ALTER TABLE chat_geral ADD COLUMN ${name} ${type}`);
+    }
+  }
 }
 
 export default async function handler(req, res) {
@@ -40,19 +60,23 @@ export default async function handler(req, res) {
       const since = Math.max(Number(req.query?.since) || 0, 0);
       const result = since
         ? await db.execute({
-            sql: `SELECT id, autor, texto, data FROM chat_geral WHERE id > ? ORDER BY id ASC LIMIT ?`,
+            sql: `SELECT id, autor, texto, data, media_url, media_public_id, media_type, media_duration FROM chat_geral WHERE id > ? ORDER BY id ASC LIMIT ?`,
             args: [since, limit]
           })
         : await db.execute({
-            sql: `SELECT id, autor, texto, data FROM chat_geral ORDER BY id DESC LIMIT ?`,
+            sql: `SELECT id, autor, texto, data, media_url, media_public_id, media_type, media_duration FROM chat_geral ORDER BY id DESC LIMIT ?`,
             args: [limit]
           });
 
       const rows = result.rows.map(row => ({
         id: Number(row.id),
         autor: String(row.autor),
-        texto: String(row.texto),
-        data: Number(row.data)
+        texto: String(row.texto || ''),
+        data: Number(row.data),
+        media_url: row.media_url ? String(row.media_url) : null,
+        media_public_id: row.media_public_id ? String(row.media_public_id) : null,
+        media_type: row.media_type ? String(row.media_type) : null,
+        media_duration: row.media_duration == null ? null : Number(row.media_duration)
       }));
 
       if (!since) rows.reverse();
@@ -62,19 +86,40 @@ export default async function handler(req, res) {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
     const autor = String(body.autor || '').trim().slice(0, 80);
     const texto = String(body.texto || '').trim().slice(0, 4000);
+    const mediaUrl = String(body.media_url || '').trim().slice(0, 2000);
+    const mediaPublicId = String(body.media_public_id || '').trim().slice(0, 500);
+    const mediaType = String(body.media_type || '').trim().slice(0, 80);
+    const mediaDuration = Number(body.media_duration);
 
-    if (!autor || !texto) {
-      return res.status(400).json({ error: 'autor e texto são obrigatórios.' });
+    if (!autor || (!texto && !mediaUrl)) {
+      return res.status(400).json({ error: 'autor e texto ou áudio são obrigatórios.' });
     }
 
     const data = Date.now();
     const result = await db.execute({
-      sql: `INSERT INTO chat_geral (autor, texto, data) VALUES (?, ?, ?)`,
-      args: [autor, texto, data]
+      sql: `INSERT INTO chat_geral (autor, texto, data, media_url, media_public_id, media_type, media_duration) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      args: [
+        autor,
+        texto,
+        data,
+        mediaUrl || null,
+        mediaPublicId || null,
+        mediaType || null,
+        Number.isFinite(mediaDuration) ? mediaDuration : null
+      ]
     });
 
     return res.status(201).json({
-      message: { id: Number(result.lastInsertRowid), autor, texto, data }
+      message: {
+        id: Number(result.lastInsertRowid),
+        autor,
+        texto,
+        data,
+        media_url: mediaUrl || null,
+        media_public_id: mediaPublicId || null,
+        media_type: mediaType || null,
+        media_duration: Number.isFinite(mediaDuration) ? mediaDuration : null
+      }
     });
   } catch (error) {
     console.error('Turso chat error:', error);
