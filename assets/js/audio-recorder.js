@@ -3,11 +3,10 @@
 
   const button = document.getElementById('audio-btn');
   const status = document.getElementById('audio-status');
+  const sendButton = document.getElementById('send-btn');
 
   if (!button || !status) return;
 
-  // Cloudinary: estes dois valores são públicos em uploads unsigned.
-  // A API Secret NÃO é usada no frontend.
   const CLOUDINARY_CLOUD_NAME = 'hmnhqfco';
   const CLOUDINARY_UPLOAD_PRESET = 'oio_core_audio';
   const CLOUDINARY_UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/video/upload`;
@@ -15,9 +14,13 @@
   let recorder = null;
   let chunks = [];
   let stream = null;
+  let timer = null;
+  let startedAt = 0;
 
   function setStatus(text = '') {
-    status.textContent = text;
+    const textNode = status.querySelector('.audio-status-text');
+    if (textNode) textNode.textContent = text;
+    else status.textContent = text;
     status.style.display = text ? 'block' : 'none';
   }
 
@@ -38,6 +41,27 @@
     return 'audio';
   }
 
+  function formatTime(seconds) {
+    const total = Math.max(0, Math.floor(seconds));
+    const min = Math.floor(total / 60);
+    const sec = String(total % 60).padStart(2, '0');
+    return `${min}:${sec}`;
+  }
+
+  function startTimer() {
+    clearInterval(timer);
+    startedAt = Date.now();
+    timer = setInterval(() => {
+      const elapsed = (Date.now() - startedAt) / 1000;
+      setStatus(`Gravando áudio • ${formatTime(elapsed)} • toque novamente para parar`);
+    }, 250);
+  }
+
+  function stopTimer() {
+    clearInterval(timer);
+    timer = null;
+  }
+
   async function enviarCloudinary(blob) {
     setStatus('Enviando áudio ao Cloudinary...');
 
@@ -52,34 +76,73 @@
     });
 
     const data = await response.json();
-
     if (!response.ok || !data.secure_url) {
       throw new Error(data.error?.message || `Cloudinary HTTP ${response.status}`);
     }
-
     return data;
   }
 
   function limparPreview() {
-    const oldPreview = status.querySelector('.audio-preview');
-    oldPreview?.remove();
+    status.querySelector('.audio-compose')?.remove();
+  }
+
+  function criarAcao(label, icon, className, onClick) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = className || '';
+    btn.setAttribute('aria-label', label);
+    btn.title = label;
+    const i = document.createElement('i');
+    i.setAttribute('data-lucide', icon);
+    btn.appendChild(i);
+    btn.addEventListener('click', onClick);
+    return btn;
+  }
+
+  function atualizarIcones() {
+    if (window.lucide?.createIcons) window.lucide.createIcons();
   }
 
   function mostrarPreview(url) {
     limparPreview();
 
-    const audio = document.createElement('audio');
-    audio.controls = true;
-    audio.preload = 'metadata';
-    audio.className = 'audio-preview';
-    audio.src = url;
-    audio.style.display = 'block';
-    audio.style.width = 'min(100%, 320px)';
-    audio.style.height = '38px';
-    audio.style.margin = '8px auto 0';
+    const wrap = document.createElement('div');
+    wrap.className = 'audio-compose';
 
-    status.appendChild(audio);
+    const player = document.createElement('audio');
+    player.controls = true;
+    player.preload = 'metadata';
+    player.className = 'compose-player';
+    player.src = url;
+
+    const actions = document.createElement('div');
+    actions.className = 'compose-actions';
+
+    const excluir = criarAcao('Excluir áudio', 'trash-2', 'compose-delete', () => {
+      window.oioPendingAudio = null;
+      limparPreview();
+      setStatus('');
+      button.classList.remove('recording');
+      button.setAttribute('aria-label', 'Gravar áudio');
+      window.dispatchEvent(new CustomEvent('oio:audio-cancelled'));
+    });
+
+    const continuar = criarAcao('Continuar gravando', 'mic', 'compose-continue', () => {
+      window.oioPendingAudio = null;
+      limparPreview();
+      setStatus('');
+      iniciarGravacao();
+    });
+
+    actions.append(excluir, continuar);
+    wrap.append(player, actions);
+    status.innerHTML = '';
+    const text = document.createElement('div');
+    text.className = 'audio-status-text';
+    text.textContent = 'Áudio pronto — confira e toque em enviar ➤';
+    status.append(text, wrap);
     status.style.display = 'block';
+    atualizarIcones();
   }
 
   async function processarGravacao(blob) {
@@ -88,12 +151,8 @@
 
     try {
       const data = await enviarCloudinary(blob);
+      if (data.secure_url) mostrarPreview(data.secure_url);
 
-      if (data.secure_url) {
-        mostrarPreview(data.secure_url);
-      }
-
-      // Deixa o áudio pronto para o botão ENVIAR do composer.
       window.oioPendingAudio = {
         url: data.secure_url,
         publicId: data.public_id || null,
@@ -103,7 +162,7 @@
         mimeType: blob.type || null
       };
 
-      setStatus('Áudio pronto. Toque no botão ➤ para enviar ao chat.');
+      setStatus('Áudio pronto — confira e toque em enviar ➤');
       window.dispatchEvent(new CustomEvent('oio:audio-ready', {
         detail: window.oioPendingAudio
       }));
@@ -123,6 +182,8 @@
     }
 
     try {
+      window.oioPendingAudio = null;
+      limparPreview();
       stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const type = mimeType();
       recorder = new MediaRecorder(stream, type ? { mimeType: type } : undefined);
@@ -134,8 +195,8 @@
 
       recorder.onstop = () => {
         const blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+        stopTimer();
         processarGravacao(blob);
-
         stream?.getTracks().forEach(track => track.stop());
         stream = null;
       };
@@ -143,9 +204,11 @@
       recorder.start();
       button.classList.add('recording');
       button.setAttribute('aria-label', 'Parar gravação');
-      setStatus('Gravando áudio... toque novamente para parar.');
+      startTimer();
+      setStatus('Gravando áudio • 0:00 • toque novamente para parar');
     } catch (error) {
       console.error(error);
+      stopTimer();
       setStatus('Não foi possível acessar o microfone.');
       stream?.getTracks().forEach(track => track.stop());
       stream = null;
@@ -155,6 +218,7 @@
   function pararGravacao() {
     if (!recorder || recorder.state === 'inactive') return;
     recorder.stop();
+    stopTimer();
     button.classList.remove('recording');
     button.setAttribute('aria-label', 'Gravar áudio');
   }
@@ -162,5 +226,14 @@
   button.addEventListener('click', () => {
     if (recorder?.state === 'recording') pararGravacao();
     else iniciarGravacao();
+  });
+
+  window.addEventListener('oio:audio-sent', () => {
+    limparPreview();
+    setStatus('');
+  });
+
+  window.addEventListener('oio:audio-cancelled', () => {
+    if (sendButton) sendButton.setAttribute('aria-label', 'Enviar mensagem');
   });
 })();
