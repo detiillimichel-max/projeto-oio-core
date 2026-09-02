@@ -8,26 +8,87 @@
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-storage-compat.js"></script>
     <style>
-        body { margin: 0; background: #000; color: #fff; font-family: sans-serif; overflow: hidden; }
-        /* EFEITO TIKTOK: Rola um por um */
+        :root { --oio-bg: #000; --oio-surface: #121319; --oio-accent: #C4C4C4; --oio-text: #241f1a; }
+        * { box-sizing: border-box; }
+        body { margin: 0; background: var(--oio-bg); color: #fff; font-family: sans-serif; overflow: hidden; }
         .feed-tiktok { height: 100vh; scroll-snap-type: y mandatory; overflow-y: scroll; }
         .video-card { height: 100vh; scroll-snap-align: start; display: flex; flex-direction: column; justify-content: center; position: relative; border-bottom: 1px solid #222; }
         video { width: 100%; height: 80vh; object-fit: contain; }
         .info-video { padding: 20px; position: absolute; bottom: 100px; background: linear-gradient(transparent, rgba(0,0,0,0.8)); width: 100%; }
-        .btn-postar { position: fixed; bottom: 80px; right: 20px; background: #C4C4C4; color: #241f1a; border: none; padding: 15px 25px; border-radius: 30px; font-weight: bold; z-index: 10; }
-        .btn-voltar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.1); border: 1px solid #333; color: #fff; padding: 10px 25px; border-radius: 20px; z-index: 10; }
+        .btn-postar { position: fixed; bottom: 80px; right: 20px; background: #C4C4C4; color: #241f1a; border: none; padding: 15px 25px; border-radius: 30px; font-weight: bold; z-index: 10; cursor: pointer; }
+        .btn-voltar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(255,255,255,0.1); border: 1px solid #333; color: #fff; padding: 10px 25px; border-radius: 20px; z-index: 10; cursor: pointer; }
+
+        /* PAINEL DE POSTAGEM — somente front-end nesta etapa */
+        .post-overlay { position: fixed; inset: 0; z-index: 50; display: none; align-items: flex-end; justify-content: center; background: rgba(0,0,0,.72); backdrop-filter: blur(5px); }
+        .post-overlay.open { display: flex; }
+        .post-panel { width: min(100%, 520px); max-height: 92vh; overflow-y: auto; background: #121319; border: 1px solid #303139; border-radius: 26px 26px 0 0; padding: 20px; box-shadow: 0 -15px 50px rgba(0,0,0,.45); }
+        .post-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+        .post-head h2 { margin: 0; font-size: 18px; }
+        .post-close { width: 38px; height: 38px; border: 0; border-radius: 50%; background: #24252b; color: #fff; font-size: 22px; cursor: pointer; }
+        .video-picker { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+        .video-picker button, .post-publish { border: 0; border-radius: 16px; padding: 14px; font-weight: 700; cursor: pointer; }
+        .video-picker button { background: #24252b; color: #fff; border: 1px solid #383941; }
+        .video-picker button:first-child { background: #C4C4C4; color: #241f1a; }
+        .preview-wrap { display: none; background: #000; border-radius: 18px; overflow: hidden; margin-bottom: 14px; }
+        .preview-wrap.show { display: block; }
+        #video-preview { display: block; width: 100%; max-height: 48vh; object-fit: contain; background: #000; }
+        .video-meta { display: none; justify-content: space-between; gap: 10px; margin: 8px 0 14px; font-size: 12px; color: #aaa; }
+        .video-meta.show { display: flex; }
+        .description-label { display: flex; justify-content: space-between; margin-bottom: 7px; font-size: 13px; color: #ddd; }
+        #video-description { width: 100%; min-height: 48px; resize: none; background: #202126; border: 1px solid #3a3b43; border-radius: 14px; color: #fff; padding: 13px; outline: none; font: inherit; }
+        #video-description:focus { border-color: #C4C4C4; }
+        #video-description.invalid { border-color: #d96b6b; }
+        .post-error { min-height: 20px; margin: 8px 0; color: #ff9b9b; font-size: 12px; }
+        .post-publish { width: 100%; background: #C4C4C4; color: #241f1a; }
+        .post-publish:disabled { opacity: .45; cursor: not-allowed; }
+        .post-note { margin: 10px 2px 0; color: #888; font-size: 11px; line-height: 1.4; text-align: center; }
+        #video-camera-input, #video-gallery-input { display: none; }
     </style>
 </head>
 <body>
 
-    <div class="feed-tiktok" id="feed">
-        </div>
+    <div class="feed-tiktok" id="feed"></div>
 
-    <button class="btn-postar" onclick="postarVideo()">＋ POSTAR VÍDEO</button>
+    <button class="btn-postar" onclick="abrirPostagem()">＋ POSTAR VÍDEO</button>
     <button class="btn-voltar" onclick="window.location.href='teste.html'">❮ VOLTAR AO CHAT</button>
 
+    <div class="post-overlay" id="post-overlay" aria-hidden="true">
+        <section class="post-panel" role="dialog" aria-modal="true" aria-labelledby="post-title">
+            <div class="post-head">
+                <h2 id="post-title">Postar vídeo</h2>
+                <button class="post-close" type="button" onclick="fecharPostagem()" aria-label="Fechar">×</button>
+            </div>
+
+            <div class="video-picker">
+                <button type="button" onclick="document.getElementById('video-camera-input').click()">Câmera</button>
+                <button type="button" onclick="document.getElementById('video-gallery-input').click()">Escolher vídeo</button>
+            </div>
+
+            <input id="video-camera-input" type="file" accept="video/*" capture="environment">
+            <input id="video-gallery-input" type="file" accept="video/mp4,video/webm,video/quicktime,video/*">
+
+            <div class="preview-wrap" id="preview-wrap">
+                <video id="video-preview" controls playsinline></video>
+            </div>
+
+            <div class="video-meta" id="video-meta">
+                <span id="video-duration">Duração: —</span>
+                <span id="video-size">Tamanho: —</span>
+            </div>
+
+            <label class="description-label" for="video-description">
+                <span>Descrição</span>
+                <span id="description-counter">0/30</span>
+            </label>
+            <textarea id="video-description" maxlength="30" placeholder="Escreva uma descrição curta..." disabled></textarea>
+            <div class="post-error" id="post-error" role="alert"></div>
+
+            <button class="post-publish" id="post-publish" type="button" disabled onclick="prepararPublicacao()">PUBLICAR VÍDEO</button>
+            <p class="post-note">Nesta etapa, o vídeo fica apenas preparado no front-end. A próxima etapa conecta a publicação ao Cloudinary + Turso.</p>
+        </section>
+    </div>
+
     <script>
-        // Use o seu FirebaseConfig aqui (igual ao do teste.html)
         const firebaseConfig = {
             apiKey: "AIzaSyBG3oBoBvOwySN04gR0CgCCXToZ0G-av60",
             authDomain: "vibe-app-bbba2.firebaseapp.com",
@@ -39,41 +100,179 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
-        const storage = firebase.storage();
 
-        // MEMÓRIA: Volta para onde o usuário parou
         const feed = document.getElementById('feed');
-        feed.onscroll = () => localStorage.setItem('vibe_posicao', feed.scrollTop);
-        window.onload = () => feed.scrollTop = localStorage.getItem('vibe_posicao') || 0;
+        const overlay = document.getElementById('post-overlay');
+        const previewWrap = document.getElementById('preview-wrap');
+        const preview = document.getElementById('video-preview');
+        const description = document.getElementById('video-description');
+        const counter = document.getElementById('description-counter');
+        const errorBox = document.getElementById('post-error');
+        const publishBtn = document.getElementById('post-publish');
+        const meta = document.getElementById('video-meta');
+        const durationLabel = document.getElementById('video-duration');
+        const sizeLabel = document.getElementById('video-size');
 
-        // BUSCAR VÍDEOS NO FIREBASE
+        const MAX_VIDEOS = 10;
+        const MAX_DURATION_SECONDS = 30;
+        const MAX_SIZE_BYTES = 30 * 1024 * 1024;
+        let videoSelecionado = null;
+        let videoObjectUrl = null;
+
+        // MEMÓRIA: volta para onde o usuário parou.
+        feed.onscroll = () => localStorage.setItem('vibe_posicao', feed.scrollTop);
+        window.addEventListener('load', () => feed.scrollTop = Number(localStorage.getItem('vibe_posicao') || 0));
+
+        // FEED LEGADO: permanece somente como leitura nesta etapa.
         db.ref('feed_tiktok').on('value', snap => {
-            feed.innerHTML = "";
+            feed.innerHTML = '';
             snap.forEach(item => {
                 const v = item.val();
-                feed.innerHTML += `
-                    <div class="video-card">
-                        <video src="${v.url}" loop onclick="this.paused?this.play():this.pause()"></video>
-                        <div class="info-video"><strong>@${v.autor}</strong></div>
-                    </div>`;
+                const card = document.createElement('div');
+                card.className = 'video-card';
+                const video = document.createElement('video');
+                video.src = v.url || '';
+                video.loop = true;
+                video.playsInline = true;
+                video.muted = true;
+                video.onclick = () => video.paused ? video.play() : video.pause();
+                const info = document.createElement('div');
+                info.className = 'info-video';
+                const author = document.createElement('strong');
+                author.textContent = '@' + (v.autor || 'Usuário');
+                info.appendChild(author);
+                if (v.descricao) {
+                    info.appendChild(document.createElement('br'));
+                    info.appendChild(document.createTextNode(v.descricao));
+                }
+                card.append(video, info);
+                feed.appendChild(card);
             });
         });
 
-        // FUNÇÃO POSTAR
-        async function postarVideo() {
-            const fileInput = document.createElement('input');
-            fileInput.type = 'file'; fileInput.accept = 'video/*';
-            fileInput.onchange = async e => {
-                const file = e.target.files[0];
-                alert("Enviando... Aguarde o sinal da Estrela ⭐");
-                const ref = storage.ref().child('videos/' + Date.now());
-                await ref.put(file);
-                const url = await ref.getDownloadURL();
-                await db.ref('feed_tiktok').push({ autor: localStorage.getItem("oio_nome") || "Michel", url: url, data: Date.now() });
-                alert("Postado!");
-            };
-            fileInput.click();
+        function abrirPostagem() {
+            errorBox.textContent = '';
+            const quantidade = feed.querySelectorAll('.video-card').length;
+            if (quantidade >= MAX_VIDEOS) {
+                alert('O limite de 10 vídeos já foi atingido.');
+                return;
+            }
+            overlay.classList.add('open');
+            overlay.setAttribute('aria-hidden', 'false');
         }
+
+        function fecharPostagem() {
+            overlay.classList.remove('open');
+            overlay.setAttribute('aria-hidden', 'true');
+            limparSelecao();
+        }
+
+        function limparSelecao() {
+            videoSelecionado = null;
+            if (videoObjectUrl) URL.revokeObjectURL(videoObjectUrl);
+            videoObjectUrl = null;
+            preview.pause();
+            preview.removeAttribute('src');
+            preview.load();
+            previewWrap.classList.remove('show');
+            meta.classList.remove('show');
+            description.value = '';
+            description.disabled = true;
+            counter.textContent = '0/30';
+            publishBtn.disabled = true;
+            errorBox.textContent = '';
+        }
+
+        function selecionarVideo(file) {
+            if (!file) return;
+            limparSelecao();
+            errorBox.textContent = '';
+
+            if (!file.type.startsWith('video/')) {
+                errorBox.textContent = 'Escolha um arquivo de vídeo válido.';
+                return;
+            }
+            if (file.size > MAX_SIZE_BYTES) {
+                errorBox.textContent = 'Este vídeo ultrapassa o limite de 30 MB.';
+                return;
+            }
+
+            videoSelecionado = file;
+            videoObjectUrl = URL.createObjectURL(file);
+            preview.src = videoObjectUrl;
+            previewWrap.classList.add('show');
+            meta.classList.add('show');
+            sizeLabel.textContent = 'Tamanho: ' + formatarTamanho(file.size);
+
+            preview.onloadedmetadata = () => {
+                const duracao = Number(preview.duration || 0);
+                durationLabel.textContent = 'Duração: ' + formatarDuracao(duracao);
+                if (!Number.isFinite(duracao) || duracao <= 0) {
+                    errorBox.textContent = 'Não foi possível identificar a duração do vídeo.';
+                    return;
+                }
+                if (duracao > MAX_DURATION_SECONDS) {
+                    errorBox.textContent = 'O vídeo precisa ter no máximo 30 segundos.';
+                    description.disabled = true;
+                    publishBtn.disabled = true;
+                    return;
+                }
+                description.disabled = false;
+                publishBtn.disabled = false;
+            };
+        }
+
+        document.getElementById('video-camera-input').addEventListener('change', e => selecionarVideo(e.target.files[0]));
+        document.getElementById('video-gallery-input').addEventListener('change', e => selecionarVideo(e.target.files[0]));
+
+        description.addEventListener('input', () => {
+            counter.textContent = description.value.length + '/30';
+            description.classList.toggle('invalid', description.value.length > 30);
+        });
+
+        function prepararPublicacao() {
+            const quantidade = feed.querySelectorAll('.video-card').length;
+            const texto = description.value.trim();
+            const duracao = Number(preview.duration || 0);
+
+            if (quantidade >= MAX_VIDEOS) {
+                errorBox.textContent = 'O limite de 10 vídeos já foi atingido.';
+                return;
+            }
+            if (!videoSelecionado) {
+                errorBox.textContent = 'Escolha um vídeo primeiro.';
+                return;
+            }
+            if (videoSelecionado.size > MAX_SIZE_BYTES) {
+                errorBox.textContent = 'Este vídeo ultrapassa o limite de 30 MB.';
+                return;
+            }
+            if (!Number.isFinite(duracao) || duracao <= 0 || duracao > MAX_DURATION_SECONDS) {
+                errorBox.textContent = 'O vídeo precisa ter no máximo 30 segundos.';
+                return;
+            }
+            if (texto.length > 30) {
+                errorBox.textContent = 'A descrição pode ter no máximo 30 caracteres.';
+                return;
+            }
+
+            errorBox.textContent = 'Front-end validado. Próxima etapa: enviar este arquivo ao Cloudinary e salvar os dados no Turso.';
+        }
+
+        function formatarDuracao(segundos) {
+            const total = Math.floor(segundos);
+            const min = Math.floor(total / 60);
+            const seg = String(total % 60).padStart(2, '0');
+            return min + ':' + seg;
+        }
+
+        function formatarTamanho(bytes) {
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        overlay.addEventListener('click', e => {
+            if (e.target === overlay) fecharPostagem();
+        });
     </script>
 </body>
 </html>
