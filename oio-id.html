@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#8b8700">
+  <title>OIO ID — Protótipo B.1</title>
+  <style>
+    :root {
+      --oio-olive: #8b8700;
+      --oio-olive-dark: #6f6c00;
+      --oio-line: rgba(139, 135, 0, .24);
+      --oio-white: #f2f2f2;
+      --oio-muted: #aaa;
+      --oio-blue: #0879df;
+      --oio-danger: #d95b5b;
+      --oio-success: #6fc47b;
+      --oio-black: #000;
+      --oio-panel: rgba(255,255,255,.035);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body { margin: 0; min-height: 100%; background: var(--oio-black); color: var(--oio-white); font-family: Arial, Helvetica, sans-serif; }
+    body { min-height: 100vh; overflow-x: hidden; }
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .app {
+      min-height: 100vh;
+      background:
+        repeating-linear-gradient(to bottom, transparent 0, transparent 48px, var(--oio-line) 49px, transparent 50px),
+        #000;
+    }
+
+    .topbar {
+      height: 74px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      padding: 0 22px;
+      background: var(--oio-olive);
+      border-bottom: 2px solid #111;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .back {
+      border: 0;
+      background: transparent;
+      font-size: 38px;
+      line-height: 1;
+      cursor: pointer;
+      padding: 0 4px;
+    }
+
+    .brand { font-size: 24px; letter-spacing: .2px; }
+    .spacer { flex: 1; }
+    .menu-btn { border: 0; background: transparent; font-size: 30px; cursor: pointer; }
+
+    main { width: min(100%, 560px); margin: 0 auto; padding: 34px 22px 54px; }
+
+    .screen { display: none; animation: appear .18s ease-out; }
+    .screen.active { display: block; }
+    @keyframes appear { from { opacity: .2; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+    .intro { margin: 14px 0 30px; }
+    .intro h1 { margin: 0 0 8px; font-size: 34px; font-weight: 400; }
+    .intro p { margin: 0; color: var(--oio-muted); font-size: 16px; line-height: 1.5; }
+
+    .card {
+      background: var(--oio-panel);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 18px;
+      padding: 24px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.35);
+    }
+
+    .field { margin-bottom: 18px; }
+    .field label { display: block; margin-bottom: 8px; color: #d7d7d7; font-size: 15px; }
+    .field input {
+      width: 100%;
+      height: 52px;
+      padding: 0 15px;
+      border-radius: 12px;
+      border: 1px solid #444;
+      outline: none;
+      background: #0c0c0c;
+      color: white;
+    }
+    .field input:focus { border-color: var(--oio-olive); box-shadow: 0 0 0 2px rgba(139,135,0,.18); }
+
+    .password-wrap { position: relative; }
+    .password-wrap input { padding-right: 52px; }
+    .toggle-password {
+      position: absolute;
+      right: 8px;
+      top: 7px;
+      width: 38px;
+      height: 38px;
+      border: 0;
+      background: transparent;
+      color: #ccc;
+      cursor: pointer;
+    }
+
+    .primary {
+      width: 100%;
+      min-height: 52px;
+      border: 0;
+      border-radius: 12px;
+      background: var(--oio-olive);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .primary:active { transform: scale(.99); }
+
+    .secondary {
+      width: 100%;
+      min-height: 50px;
+      margin-top: 12px;
+      border: 1px solid #555;
+      border-radius: 12px;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .link-btn { border: 0; background: transparent; color: #ddd; text-decoration: underline; cursor: pointer; }
+    .center { text-align: center; }
+    .switch { margin-top: 20px; color: var(--oio-muted); font-size: 14px; }
+
+    .message { display: none; margin-bottom: 18px; padding: 12px 14px; border-radius: 10px; font-size: 14px; line-height: 1.4; }
+    .message.show { display: block; }
+    .message.error { border: 1px solid rgba(217,91,91,.6); color: #ffaaaa; background: rgba(217,91,91,.08); }
+    .message.success { border: 1px solid rgba(111,196,123,.55); color: #b9efc0; background: rgba(111,196,123,.08); }
+
+    .avatar-area { display: flex; justify-content: center; margin: 4px 0 28px; }
+    .avatar-button {
+      width: 154px;
+      height: 154px;
+      border: 1px solid #777;
+      border-radius: 50%;
+      background: #090909;
+      display: grid;
+      place-items: center;
+      cursor: pointer;
+      overflow: hidden;
+      position: relative;
+    }
+    .avatar-button::after {
+      content: 'Foto';
+      position: absolute;
+      bottom: 12px;
+      font-size: 17px;
+      color: #bbb;
+    }
+    .avatar-icon { width: 62px; height: 62px; fill: var(--oio-blue); }
+    .avatar-preview { width: 100%; height: 100%; object-fit: cover; display: none; }
+    .avatar-button.has-photo .avatar-preview { display: block; }
+    .avatar-button.has-photo .avatar-icon { display: none; }
+    .avatar-button.has-photo::after { background: rgba(0,0,0,.55); left: 0; right: 0; bottom: 0; padding: 7px; }
+
+    .profile-name { text-align: center; font-size: 28px; margin: 0 0 7px; }
+    .profile-id { text-align: center; color: #888; font-size: 13px; margin-bottom: 28px; }
+
+    .profile-menu { border-top: 1px solid #333; }
+    .profile-menu button {
+      width: 100%;
+      min-height: 58px;
+      text-align: left;
+      border: 0;
+      border-bottom: 1px solid #292929;
+      background: transparent;
+      font-size: 19px;
+      cursor: pointer;
+      padding: 0 10px;
+    }
+    .profile-menu button:hover { background: rgba(255,255,255,.035); }
+    .profile-menu .exit { margin-top: 18px; color: #ddd; }
+
+    .badge {
+      display: inline-flex;
+      padding: 5px 9px;
+      border: 1px solid #555;
+      border-radius: 999px;
+      font-size: 11px;
+      color: #aaa;
+      margin-bottom: 20px;
+    }
+
+    .camera-note { margin-top: 14px; text-align: center; color: #777; font-size: 12px; }
+
+    @media (max-width: 420px) {
+      .topbar { height: 68px; padding: 0 15px; gap: 12px; }
+      .brand { font-size: 21px; }
+      main { padding: 26px 14px 42px; }
+      .card { padding: 19px; }
+      .intro h1 { font-size: 30px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <button class="back" id="backBtn" aria-label="Voltar">‹</button>
+      <div class="brand">OIO ID</div>
+      <div class="spacer"></div>
+      <button class="menu-btn" aria-label="Mais opções">⋮</button>
+    </header>
+
+    <main>
+      <section class="screen active" id="loginScreen">
+        <div class="intro">
+          <span class="badge">FASE B.1 · PROTÓTIPO VISUAL</span>
+          <h1>Entrar</h1>
+          <p>Seu acesso central ao ecossistema OIO.</p>
+        </div>
+
+        <div class="card">
+          <div class="message" id="loginMessage"></div>
+          <form id="loginForm" novalidate>
+            <div class="field">
+              <label for="loginEmail">E-mail</label>
+              <input id="loginEmail" type="email" autocomplete="email" placeholder="seu@email.com">
+            </div>
+            <div class="field">
+              <label for="loginPassword">Senha</label>
+              <div class="password-wrap">
+                <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Sua senha">
+                <button class="toggle-password" type="button" data-target="loginPassword" aria-label="Mostrar senha">◉</button>
+              </div>
+            </div>
+            <button class="primary" type="submit">ENTRAR</button>
+          </form>
+          <div class="center switch">Ainda não tem OIO ID? <button class="link-btn" type="button" data-go="registerScreen">Criar conta</button></div>
+        </div>
+      </section>
+
+      <section class="screen" id="registerScreen">
+        <div class="intro">
+          <span class="badge">FASE B.1 · SEM BANCO</span>
+          <h1>Criar OIO ID</h1>
+          <p>Layout preparado para a futura autenticação real.</p>
+        </div>
+
+        <div class="card">
+          <div class="message" id="registerMessage"></div>
+          <form id="registerForm" novalidate>
+            <div class="field">
+              <label for="registerName">Nome</label>
+              <input id="registerName" type="text" autocomplete="name" placeholder="Seu nome">
+            </div>
+            <div class="field">
+              <label for="registerEmail">E-mail</label>
+              <input id="registerEmail" type="email" autocomplete="email" placeholder="seu@email.com">
+            </div>
+            <div class="field">
+              <label for="registerPassword">Senha</label>
+              <div class="password-wrap">
+                <input id="registerPassword" type="password" autocomplete="new-password" placeholder="Crie uma senha">
+                <button class="toggle-password" type="button" data-target="registerPassword" aria-label="Mostrar senha">◉</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="registerPassword2">Confirmar senha</label>
+              <div class="password-wrap">
+                <input id="registerPassword2" type="password" autocomplete="new-password" placeholder="Repita a senha">
+                <button class="toggle-password" type="button" data-target="registerPassword2" aria-label="Mostrar senha">◉</button>
+              </div>
+            </div>
+            <button class="primary" type="submit">CRIAR OIO ID</button>
+          </form>
+          <div class="center switch">Já possui OIO ID? <button class="link-btn" type="button" data-go="loginScreen">Entrar</button></div>
+        </div>
+      </section>
+
+      <section class="screen" id="profileScreen">
+        <div class="intro">
+          <span class="badge">OIO ID · PERFIL</span>
+          <h1>Meu perfil</h1>
+          <p>Identidade central do usuário OIO.</p>
+        </div>
+
+        <div class="card">
+          <div class="avatar-area">
+            <button class="avatar-button" id="avatarButton" type="button" aria-label="Adicionar foto do perfil">
+              <svg class="avatar-icon" viewBox="0 0 64 64" aria-hidden="true">
+                <circle cx="32" cy="21" r="12"></circle>
+                <path d="M10 55c2-12 10-18 22-18s20 6 22 18H10z"></path>
+              </svg>
+              <img class="avatar-preview" id="avatarPreview" alt="Prévia da foto do perfil">
+            </button>
+            <input id="avatarInput" type="file" accept="image/*" capture="user" hidden>
+          </div>
+          <div class="camera-note">Toque na foto para abrir câmera ou galeria.</div>
+
+          <h2 class="profile-name" id="profileName">Michel</h2>
+          <div class="profile-id">OIO ID visual · ainda sem identidade persistente</div>
+
+          <nav class="profile-menu" aria-label="Menu do perfil">
+            <button type="button" data-demo="OIO Core">OIO Core</button>
+            <button type="button" data-demo="Vitorino">Vitorino</button>
+            <button type="button" data-demo="Configurações">Configurações</button>
+            <button class="exit" type="button" id="logoutDemo">SAIR</button>
+          </nav>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    // OIO ID — FASE B.1
+    // Protótipo 100% local. Não conecta a banco, Cloudinary ou autenticação.
+
+    const screens = [...document.querySelectorAll('.screen')];
+    const backBtn = document.getElementById('backBtn');
+    let currentScreen = 'loginScreen';
+
+    function showScreen(id) {
+      screens.forEach(screen => screen.classList.toggle('active', screen.id === id));
+      currentScreen = id;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('[data-go]').forEach(button => {
+      button.addEventListener('click', () => showScreen(button.dataset.go));
+    });
+
+    backBtn.addEventListener('click', () => {
+      if (currentScreen === 'registerScreen' || currentScreen === 'profileScreen') showScreen('loginScreen');
+    });
+
+    function message(element, text, type) {
+      element.textContent = text;
+      element.className = 'message show ' + type;
+    }
+
+    document.querySelectorAll('.toggle-password').forEach(button => {
+      button.addEventListener('click', () => {
+        const input = document.getElementById(button.dataset.target);
+        const visible = input.type === 'text';
+        input.type = visible ? 'password' : 'text';
+        button.setAttribute('aria-label', visible ? 'Mostrar senha' : 'Ocultar senha');
+        button.textContent = visible ? '◉' : '◌';
+      });
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const box = document.getElementById('loginMessage');
+
+      if (!email || !password) {
+        message(box, 'Preencha e-mail e senha para testar o layout.', 'error');
+        return;
+      }
+
+      message(box, 'Modo visual: login recebido. Nenhum dado foi enviado para servidor.', 'success');
+      document.getElementById('profileName').textContent = email.split('@')[0] || 'Usuário OIO';
+      setTimeout(() => showScreen('profileScreen'), 650);
+    });
+
+    document.getElementById('registerForm').addEventListener('submit', event => {
+      event.preventDefault();
+      const name = document.getElementById('registerName').value.trim();
+      const email = document.getElementById('registerEmail').value.trim();
+      const password = document.getElementById('registerPassword').value;
+      const password2 = document.getElementById('registerPassword2').value;
+      const box = document.getElementById('registerMessage');
+
+      if (!name || !email || !password || !password2) {
+        message(box, 'Preencha todos os campos para testar o estado de erro.', 'error');
+        return;
+      }
+      if (password !== password2) {
+        message(box, 'As senhas não conferem.', 'error');
+        return;
+      }
+
+      message(box, 'Cadastro visual concluído. Nenhuma conta foi criada no servidor.', 'success');
+      document.getElementById('profileName').textContent = name;
+      setTimeout(() => showScreen('profileScreen'), 650);
+    });
+
+    const avatarButton = document.getElementById('avatarButton');
+    const avatarInput = document.getElementById('avatarInput');
+    const avatarPreview = document.getElementById('avatarPreview');
+
+    // A área de avatar já está preparada para câmera/galeria.
+    // O arquivo é usado somente como prévia local nesta fase.
+    avatarButton.addEventListener('click', () => avatarInput.click());
+
+    avatarInput.addEventListener('change', () => {
+      const file = avatarInput.files && avatarInput.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = event => {
+        avatarPreview.src = event.target.result;
+        avatarButton.classList.add('has-photo');
+      };
+      reader.readAsDataURL(file);
+    });
+
+    document.querySelectorAll('[data-demo]').forEach(button => {
+      button.addEventListener('click', () => {
+        const box = document.createElement('div');
+        box.className = 'message show success';
+        box.style.position = 'fixed';
+        box.style.left = '18px';
+        box.style.right = '18px';
+        box.style.bottom = '18px';
+        box.style.zIndex = '50';
+        box.textContent = button.dataset.demo + ': área visual preparada para a próxima fase.';
+        document.body.appendChild(box);
+        setTimeout(() => box.remove(), 1800);
+      });
+    });
+
+    document.getElementById('logoutDemo').addEventListener('click', () => {
+      const box = document.getElementById('loginMessage');
+      showScreen('loginScreen');
+      message(box, 'SAIR é apenas visual nesta FASE B.1. Nenhuma sessão real existe.', 'success');
+    });
+  </script>
+</body>
+</html>
