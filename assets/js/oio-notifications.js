@@ -59,11 +59,28 @@
     }
 
     const autor = localStorage.getItem('oio_nome') || 'Usuário';
-    await fetch(API, {
+    const response = await fetch(API, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ autor, subscription: subscription.toJSON() })
     });
+    if (!response.ok) throw new Error('Não foi possível registrar o dispositivo para notificações.');
+  }
+
+  function tratarAcaoDaNotificacao() {
+    const params = new URLSearchParams(location.search);
+    if (!params.has('responder') && !params.has('marcar')) return;
+    const responder = params.get('responder') === '1';
+    const marcar = params.get('marcar') === '1';
+    params.delete('responder');
+    params.delete('marcar');
+    const novaUrl = `${location.pathname}${params.toString() ? `?${params}` : ''}${location.hash}`;
+    history.replaceState({}, '', novaUrl);
+    if (marcar) clearUnread();
+    if (responder) {
+      clearUnread();
+      setTimeout(() => document.getElementById('msg-input')?.focus(), 150);
+    }
   }
 
   function iniciarContador() {
@@ -95,6 +112,7 @@
   }
 
   function iniciar() {
+    tratarAcaoDaNotificacao();
     iniciarContador();
     limparAoAbrir();
     registerWorker().catch(error => console.warn('OIO Service Worker:', error));
