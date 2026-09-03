@@ -1,4 +1,5 @@
 import { createClient } from '@libsql/client';
+import webpush from 'web-push';
 
 let client;
 
@@ -41,6 +42,57 @@ async function ensureSchema(db) {
     if (!existing.has(name)) {
       await db.execute(`ALTER TABLE chat_geral ADD COLUMN ${name} ${type}`);
     }
+  }
+
+  await db.execute(`CREATE TABLE IF NOT EXISTS push_subscriptions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    autor TEXT NOT NULL,
+    endpoint TEXT NOT NULL UNIQUE,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    data INTEGER NOT NULL
+  )`);
+}
+
+function pushConfigured() {
+  return Boolean(process.env.OIO_VAPID_PUBLIC_KEY && process.env.OIO_VAPID_PRIVATE_KEY);
+}
+
+async function enviarNotificacoesPush(db, message) {
+  if (!pushConfigured()) return;
+  try {
+    webpush.setVapidDetails(
+      process.env.OIO_VAPID_SUBJECT || 'https://projeto-oio-core.vercel.app/',
+      process.env.OIO_VAPID_PUBLIC_KEY,
+      process.env.OIO_VAPID_PRIVATE_KEY
+    );
+
+    const result = await db.execute(`SELECT id, autor, endpoint, p256dh, auth FROM push_subscriptions WHERE autor != ?`, [message.autor]);
+    const bodyText = message.texto || (String(message.media_type || '').startsWith('image/') ? '📷 Foto recebida' : '🎙️ Áudio recebido');
+    const payload = JSON.stringify({
+      title: `OIO • ${message.autor}`,
+      body: bodyText.slice(0, 180),
+      messageId: message.id,
+      url: 'teste.html'
+    });
+
+    await Promise.all(result.rows.map(async row => {
+      const subscription = {
+        endpoint: String(row.endpoint),
+        keys: { p256dh: String(row.p256dh), auth: String(row.auth) }
+      };
+      try {
+        await webpush.sendNotification(subscription, payload, { TTL: 60 * 60 * 24 });
+      } catch (error) {
+        if (error.statusCode === 404 || error.statusCode === 410) {
+          await db.execute(`DELETE FROM push_subscriptions WHERE id = ?`, [Number(row.id)]);
+        } else {
+          console.error('OIO push delivery error:', error.statusCode || error.message);
+        }
+      }
+    }));
+  } catch (error) {
+    console.error('OIO push setup error:', error.message);
   }
 }
 
@@ -109,18 +161,19 @@ export default async function handler(req, res) {
       ]
     });
 
-    return res.status(201).json({
-      message: {
-        id: Number(result.lastInsertRowid),
-        autor,
-        texto,
-        data,
-        media_url: mediaUrl || null,
-        media_public_id: mediaPublicId || null,
-        media_type: mediaType || null,
-        media_duration: Number.isFinite(mediaDuration) ? mediaDuration : null
-      }
-    });
+    const message = {
+      id: Number(result.lastInsertRowid),
+      autor,
+      texto,
+      data,
+      media_url: mediaUrl || null,
+      media_public_id: mediaPublicId || null,
+      media_type: mediaType || null,
+      media_duration: Number.isFinite(mediaDuration) ? mediaDuration : null
+    };
+
+    await enviarNotificacoesPush(db, message);
+    return res.status(201).json({ message });
   } catch (error) {
     console.error('Turso chat error:', error);
     return res.status(500).json({
