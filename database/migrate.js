@@ -7,8 +7,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const migrationsDir = path.join(__dirname, 'migrations');
 
-const url = process.env.TURSO_DATABASE_URL;
-const authToken = process.env.TURSO_AUTH_TOKEN;
+const url = process.env.TURSO_DATABASE_URL?.trim();
+const authToken = process.env.TURSO_AUTH_TOKEN?.trim();
 
 if (!url || !authToken) {
   throw new Error('TURSO_DATABASE_URL e TURSO_AUTH_TOKEN são obrigatórios.');
