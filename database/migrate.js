@@ -16,6 +16,13 @@ if (!url || !authToken) {
 
 const db = createClient({ url, authToken });
 
+function hasSqlStatement(statement) {
+  return statement
+    .replace(/^\s*--[^\r\n]*(?:\r?\n|$)/gm, '')
+    .trim()
+    .length > 0;
+}
+
 function splitSql(sql) {
   const statements = [];
   let current = '';
@@ -45,7 +52,10 @@ function splitSql(sql) {
     }
 
     if (char === ';') {
-      if (current.trim()) statements.push(current.trim());
+      const statement = current.trim();
+      if (statement && hasSqlStatement(statement)) {
+        statements.push(statement);
+      }
       current = '';
       continue;
     }
@@ -53,7 +63,11 @@ function splitSql(sql) {
     current += char;
   }
 
-  if (current.trim()) statements.push(current.trim());
+  const finalStatement = current.trim();
+  if (finalStatement && hasSqlStatement(finalStatement)) {
+    statements.push(finalStatement);
+  }
+
   return statements;
 }
 
