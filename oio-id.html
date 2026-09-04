@@ -136,14 +136,8 @@
     <div class="avatar-choice" role="dialog" aria-modal="true" aria-labelledby="avatarChoiceTitle">
       <h2 id="avatarChoiceTitle">Foto do perfil</h2>
       <p>Escolha de onde deseja pegar sua foto.</p>
-      <button class="choice-btn" id="cameraChoice" type="button">
-        <svg viewBox="0 0 24 24"><path d="M4 7h3l1.5-2h3L13 7h3a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H4a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3Z"></path><circle cx="10" cy="13" r="3.2"></circle></svg>
-        <span>Tirar foto</span>
-      </button>
-      <button class="choice-btn" id="galleryChoice" type="button">
-        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8" cy="9" r="1.5"></circle><path d="m4 17 5-5 3 3 2-2 6 5"></path></svg>
-        <span>Escolher da galeria</span>
-      </button>
+      <button class="choice-btn" id="cameraChoice" type="button"><svg viewBox="0 0 24 24"><path d="M4 7h3l1.5-2h3L13 7h3a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H4a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3Z"></path><circle cx="10" cy="13" r="3.2"></circle></svg><span>Tirar foto</span></button>
+      <button class="choice-btn" id="galleryChoice" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8" cy="9" r="1.5"></circle><path d="m4 17 5-5 3 3 2-2 6 5"></path></svg><span>Escolher da galeria</span></button>
       <button class="choice-btn close" id="closeAvatarChoice" type="button">Fechar</button>
     </div>
   </div>
@@ -163,7 +157,7 @@
     function message(el,text,type){el.textContent=text;el.className='message show '+type;}
     document.querySelectorAll('.toggle-password').forEach(b=>b.addEventListener('click',()=>{const i=document.getElementById(b.dataset.target),v=i.type==='text';i.type=v?'password':'text';b.setAttribute('aria-label',v?'Mostrar senha':'Ocultar senha');b.textContent=v?'◉':'◌';}));
     document.getElementById('loginForm').addEventListener('submit',e=>{e.preventDefault();message(document.getElementById('loginMessage'),'ENTRAR é apenas visual nesta FASE B.1. Nenhuma sessão real existe.','success');});
-    document.getElementById('registerForm').addEventListener('submit',e=>{e.preventDefault();const n=document.getElementById('registerName').value.trim(),p=document.getElementById('registerPassword').value,p2=document.getElementById('registerPassword2').value;if(!n||!document.getElementById('registerEmail').value.trim()||!p){message(document.getElementById('registerMessage'),'Preencha nome, e-mail e senha.','error');return;}if(p!==p2){message(document.getElementById('registerMessage'),'As senhas não coincidem.','error');return;}document.getElementById('profileName').textContent=n;showScreen('profileScreen');});
+    document.getElementById('registerForm').addEventListener('submit',e=>{e.preventDefault();const n=document.getElementById('registerName').value.trim(),email=document.getElementById('registerEmail').value.trim(),p=document.getElementById('registerPassword').value,p2=document.getElementById('registerPassword2').value;if(!n||!email||!p){message(document.getElementById('registerMessage'),'Preencha nome, e-mail e senha.','error');return;}if(p!==p2){message(document.getElementById('registerMessage'),'As senhas não coincidem.','error');return;}document.getElementById('profileName').textContent=n;showScreen('profileScreen');});
     document.querySelectorAll('[data-demo]').forEach(b=>b.addEventListener('click',()=>message(document.getElementById('loginMessage'),`${b.dataset.demo}: área visual preparada para a próxima fase.`,'success')));
     document.getElementById('logoutDemo').addEventListener('click',()=>{showScreen('loginScreen');message(document.getElementById('loginMessage'),'SAIR é apenas visual nesta FASE B.1. Nenhuma sessão real existe.','success');});
     const avatarButton=document.getElementById('avatarButton'),avatarChoice=document.getElementById('avatarChoice'),cameraInput=document.getElementById('cameraInput'),galleryInput=document.getElementById('galleryInput'),avatarPreview=document.getElementById('avatarPreview');
