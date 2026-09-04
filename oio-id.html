@@ -25,7 +25,7 @@
     body { min-height:100vh; overflow-x:hidden; }
     button,input { font:inherit; }
     button { color:inherit; }
-    .app { min-height:100vh; background:repeating-linear-gradient(to bottom,transparent 0,transparent 48px,var(--oio-line) 49px,transparent 50px),var(--oio-black); }
+    .app { min-height:100vh; background:var(--oio-black); }
     .topbar { height:74px; display:flex; align-items:center; gap:18px; padding:0 22px; background:var(--oio-core); border-bottom:2px solid rgba(50,49,43,.14); position:sticky; top:0; z-index:10; }
     .back,.menu-btn { border:0; background:transparent; cursor:pointer; }
     .back { font-size:38px; line-height:1; padding:0 4px; color:#FFF; }
@@ -39,6 +39,7 @@
     .intro { margin:14px 0 30px; }
     .intro h1 { margin:0 0 8px; font-size:34px; font-weight:400; color:#202020; }
     .intro p { margin:0; color:var(--oio-muted); font-size:16px; line-height:1.5; }
+    #loginScreen .intro h1 { text-align:center; }
     .card { background:var(--oio-panel); border:1px solid var(--oio-border); border-radius:18px; padding:24px; box-shadow:0 12px 40px rgba(70,68,58,.10); backdrop-filter:blur(8px); }
     .field { margin-bottom:18px; }
     .field label { display:block; margin-bottom:8px; color:#3B3A35; font-size:15px; }
