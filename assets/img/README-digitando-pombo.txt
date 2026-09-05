@@ -1,0 +1,1 @@
+Imagem animada do indicador de digitacao. Arquivo GIF principal: assets/img/digitando-pombo.gif
