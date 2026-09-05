@@ -1,20 +1,22 @@
 /**
  * OIO Core — Indicador de digitação
- * Versão: 1.0.0
+ * Versão: 1.1.0
  * Status: módulo preparado, ainda não conectado ao CHAT.
  *
  * Objetivo:
- * - concentrar toda a lógica visual/estado de "digitando" em um único arquivo;
+ * - concentrar a lógica do indicador em um único arquivo;
+ * - usar um elemento animado pequeno no lugar dos três pontinhos;
  * - não gravar estado no Turso;
  * - não criar dados falsos;
  * - permitir que o CHAT receba posteriormente um evento real de digitação.
  *
  * Importante:
  * Esta versão NÃO finge que outro usuário está digitando.
- * O estado remoto só deve ser exibido quando o CHAT receber um evento real.
+ * O indicador só deve ser exibido após um evento real do outro usuário.
  */
 
-const OIO_DIGITANDO_VERSION = '1.0.0';
+const OIO_DIGITANDO_VERSION = '1.1.0';
+const OIO_DIGITANDO_ICON = '/assets/img/digitando-pombo.svg';
 
 function criarIndicadorDigitando({ container, nome = 'Usuário' } = {}) {
   if (!container) {
@@ -33,7 +35,15 @@ function criarIndicadorDigitando({ container, nome = 'Usuário' } = {}) {
     elemento.setAttribute('aria-label', `${nome} está digitando`);
     elemento.innerHTML = `
       <span>${nome} está digitando</span>
-      <span class="oio-digitando-pontos" aria-hidden="true">•••</span>
+      <img
+        class="oio-digitando-pombo"
+        src="${OIO_DIGITANDO_ICON}"
+        alt=""
+        aria-hidden="true"
+        width="32"
+        height="18"
+        style="width:32px;height:18px;object-fit:contain;display:inline-block;vertical-align:middle;"
+      >
     `;
 
     container.appendChild(elemento);
@@ -61,9 +71,9 @@ function criarIndicadorDigitando({ container, nome = 'Usuário' } = {}) {
 }
 
 /**
- * OIO Core — contrato futuro de eventos reais.
+ * Contrato futuro de eventos reais.
  *
- * O módulo não escolhe banco, websocket ou outro transporte.
+ * O módulo não escolhe banco, WebSocket ou outro transporte.
  * A camada de comunicação do CHAT poderá chamar:
  *
  *   indicador.mostrar()
@@ -72,4 +82,4 @@ function criarIndicadorDigitando({ container, nome = 'Usuário' } = {}) {
  * somente após receber um evento real do outro usuário.
  */
 
-export { OIO_DIGITANDO_VERSION, criarIndicadorDigitando };
+export { OIO_DIGITANDO_VERSION, OIO_DIGITANDO_ICON, criarIndicadorDigitando };
