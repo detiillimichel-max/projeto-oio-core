@@ -37,7 +37,7 @@
     <header class="topbar"><button class="back" id="backBtn" aria-label="Voltar">‹</button><div class="brand">OIO ID</div><div class="spacer"></div><button class="menu-btn" aria-label="Mais opções">⋮</button></header>
     <main>
       <section class="screen active" id="loginScreen">
-        <div class="intro"><span class="badge">FASE D.2 · LOGIN REAL</span><h1>Entrar</h1><p>Seu acesso central ao ecossistema OIO.</p></div>
+        <div class="intro"><span class="badge">FASE D.3 · SESSÃO REAL</span><h1>Entrar</h1><p>Seu acesso central ao ecossistema OIO.</p></div>
         <div class="card"><div class="message" id="loginMessage"></div>
           <form id="loginForm" novalidate><div class="field"><label for="loginEmail">E-mail</label><input id="loginEmail" type="email" autocomplete="email" placeholder="seu@email.com"></div><div class="field"><label for="loginPassword">Senha</label><div class="password-wrap"><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Sua senha"><button class="toggle-password" type="button" data-target="loginPassword" aria-label="Mostrar senha">◉</button></div></div><button class="primary" id="loginSubmit" type="submit">ENTRAR</button></form>
           <div class="center switch">Ainda não tem OIO ID? <button class="link-btn" type="button" data-go="registerScreen">Criar conta</button></div>
@@ -57,14 +57,30 @@
   <div class="avatar-choice-backdrop" id="avatarChoice" aria-hidden="true"><div class="avatar-choice" role="dialog" aria-modal="true" aria-labelledby="avatarChoiceTitle"><h2 id="avatarChoiceTitle">Foto do perfil</h2><p>Escolha de onde deseja pegar sua foto.</p><button class="choice-btn" id="cameraChoice" type="button"><svg viewBox="0 0 24 24"><path d="M4 7h3l1.5-2h3L13 7h3a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H4a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3Z"></path><circle cx="10" cy="13" r="3.2"></circle></svg><span>Tirar foto</span></button><button class="choice-btn" id="galleryChoice" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8" cy="9" r="1.5"></circle><path d="m4 17 5-5 3 3 2-2 6 5"></path></svg><span>Escolher da galeria</span></button><button class="choice-btn close" id="closeAvatarChoice" type="button">Fechar</button></div></div>
   <input id="cameraInput" type="file" accept="image/*" capture="environment" hidden><input id="galleryInput" type="file" accept="image/*" hidden>
   <script>
-    // OIO ID — FASE D.2
-    // Cadastro e login reais conectados às APIs. Sessão persistente será validada na próxima etapa.
+    // OIO ID — FASE D.3
+    // Cadastro, login e verificação de sessão reais conectados às APIs.
     const screens=[...document.querySelectorAll('.screen')]; const backBtn=document.getElementById('backBtn'); let currentScreen='loginScreen';
     function showScreen(id){screens.forEach(s=>s.classList.toggle('active',s.id===id));currentScreen=id;window.scrollTo({top:0,behavior:'smooth'});}
     document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.go)));
     backBtn.addEventListener('click',()=>{if(currentScreen==='registerScreen'||currentScreen==='profileScreen')showScreen('loginScreen');});
     function message(el,text,type){el.textContent=text;el.className='message show '+type;}
     document.querySelectorAll('.toggle-password').forEach(b=>b.addEventListener('click',()=>{const i=document.getElementById(b.dataset.target),v=i.type==='text';i.type=v?'password':'text';b.setAttribute('aria-label',v?'Mostrar senha':'Ocultar senha');b.textContent=v?'◉':'◌';}));
+
+    async function checkSession(){
+      try{
+        const response=await fetch('/api/auth/session',{method:'GET',credentials:'same-origin',cache:'no-store'});
+        const data=await response.json().catch(()=>({}));
+        if(response.ok && data.authenticated){
+          document.getElementById('profileName').textContent=data.account?.nome||'Usuário OIO';
+          const avatarUrl=data.account?.avatar_url;
+          if(avatarUrl){document.getElementById('avatarPreview').src=avatarUrl;document.getElementById('avatarButton').classList.add('has-photo');}
+          showScreen('profileScreen');
+        }
+      }catch(error){
+        console.error('OIO ID session check error:',error);
+      }
+    }
+    checkSession();
 
     document.getElementById('loginForm').addEventListener('submit',async e=>{
       e.preventDefault();
