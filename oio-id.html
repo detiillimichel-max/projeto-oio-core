@@ -7,221 +7,96 @@
   <title>OIO ID — Protótipo Visual</title>
   <style>
     :root {
-      --oio-core: #AAA99A;
-      --oio-core-dark: #979688;
-      --oio-line: rgba(125,123,100,.18);
-      --oio-white: #202020;
-      --oio-muted: #5F5E58;
-      --oio-blue: #0879DF;
-      --oio-danger: #B94F4F;
-      --oio-success: #4F7D59;
-      --oio-black: #F3F1E9;
-      --oio-panel: rgba(255,255,255,.34);
-      --oio-field: rgba(255,255,255,.72);
-      --oio-border: rgba(74,73,64,.22);
+      --oio-core: #AAA99A; --oio-core-dark: #979688; --oio-line: rgba(125,123,100,.18); --oio-white: #202020; --oio-muted: #5F5E58; --oio-blue: #0879DF; --oio-danger: #B94F4F; --oio-success: #4F7D59; --oio-black: #F3F1E9; --oio-panel: rgba(255,255,255,.34); --oio-field: rgba(255,255,255,.72); --oio-border: rgba(74,73,64,.22);
     }
     * { box-sizing: border-box; }
     html,body { margin:0; min-height:100%; background:var(--oio-black); color:var(--oio-white); font-family:Arial,Helvetica,sans-serif; }
     body { min-height:100vh; overflow-x:hidden; }
-    button,input { font:inherit; }
-    button { color:inherit; }
+    button,input { font:inherit; } button { color:inherit; }
     .app { min-height:100vh; background:var(--oio-black); }
     .topbar { height:74px; display:flex; align-items:center; gap:18px; padding:0 22px; background:var(--oio-core); border-bottom:2px solid rgba(50,49,43,.14); position:sticky; top:0; z-index:10; }
-    .back,.menu-btn { border:0; background:transparent; cursor:pointer; }
-    .back { font-size:38px; line-height:1; padding:0 4px; color:#FFF; }
-    .brand { font-size:24px; letter-spacing:.2px; color:#FFF; }
-    .spacer { flex:1; }
-    .menu-btn { font-size:30px; color:#FFF; }
+    .back,.menu-btn { border:0; background:transparent; cursor:pointer; } .back { font-size:38px; line-height:1; padding:0 4px; color:#FFF; } .brand { font-size:24px; letter-spacing:.2px; color:#FFF; } .spacer { flex:1; } .menu-btn { font-size:30px; color:#FFF; }
     main { width:min(100%,560px); margin:0 auto; padding:34px 22px 54px; }
-    .screen { display:none; animation:appear .18s ease-out; }
-    .screen.active { display:block; }
-    @keyframes appear { from { opacity:.2; transform:translateY(5px); } to { opacity:1; transform:none; } }
-    .intro { margin:14px 0 30px; }
-    .intro h1 { margin:0 0 8px; font-size:34px; font-weight:400; color:#202020; }
-    .intro p { margin:0; color:var(--oio-muted); font-size:16px; line-height:1.5; }
-    #loginScreen .intro h1 { text-align:center; }
+    .screen { display:none; animation:appear .18s ease-out; } .screen.active { display:block; } @keyframes appear { from { opacity:.2; transform:translateY(5px); } to { opacity:1; transform:none; } }
+    .intro { margin:14px 0 30px; } .intro h1 { margin:0 0 8px; font-size:34px; font-weight:400; color:#202020; } .intro p { margin:0; color:var(--oio-muted); font-size:16px; line-height:1.5; } #loginScreen .intro h1 { text-align:center; }
     .card { background:var(--oio-panel); border:1px solid var(--oio-border); border-radius:18px; padding:24px; box-shadow:0 12px 40px rgba(70,68,58,.10); backdrop-filter:blur(8px); }
-    .field { margin-bottom:18px; }
-    .field label { display:block; margin-bottom:8px; color:#3B3A35; font-size:15px; }
-    .field input { width:100%; height:52px; padding:0 15px; border-radius:12px; border:1px solid rgba(74,73,64,.30); outline:none; background:var(--oio-field); color:#171717; }
-    .field input::placeholder { color:#77766F; }
-    .field input:focus { border-color:var(--oio-core-dark); box-shadow:0 0 0 2px rgba(151,150,136,.22); }
-    .password-wrap { position:relative; }
-    .password-wrap input { padding-right:52px; }
-    .toggle-password { position:absolute; right:8px; top:7px; width:38px; height:38px; border:0; background:transparent; color:#5B5A54; cursor:pointer; }
-    .primary { width:100%; min-height:52px; border:0; border-radius:12px; background:var(--oio-core); color:#FFF; font-weight:600; cursor:pointer; box-shadow:0 5px 12px rgba(70,68,58,.12); }
-    .primary:active { transform:scale(.99); }
-    .primary:disabled { opacity:.65; cursor:wait; }
-    .link-btn { border:0; background:transparent; color:#35342F; text-decoration:underline; cursor:pointer; }
-    .center { text-align:center; }
-    .switch { margin-top:20px; color:var(--oio-muted); font-size:14px; }
-    .message { display:none; margin-bottom:18px; padding:12px 14px; border-radius:10px; font-size:14px; line-height:1.4; }
-    .message.show { display:block; }
-    .message.error { border:1px solid rgba(185,79,79,.55); color:#7D2525; background:rgba(185,79,79,.08); }
-    .message.success { border:1px solid rgba(79,125,89,.55); color:#315D3A; background:rgba(79,125,89,.08); }
+    .field { margin-bottom:18px; } .field label { display:block; margin-bottom:8px; color:#3B3A35; font-size:15px; } .field input { width:100%; height:52px; padding:0 15px; border-radius:12px; border:1px solid rgba(74,73,64,.30); outline:none; background:var(--oio-field); color:#171717; } .field input::placeholder { color:#77766F; } .field input:focus { border-color:var(--oio-core-dark); box-shadow:0 0 0 2px rgba(151,150,136,.22); }
+    .password-wrap { position:relative; } .password-wrap input { padding-right:52px; } .toggle-password { position:absolute; right:8px; top:7px; width:38px; height:38px; border:0; background:transparent; color:#5B5A54; cursor:pointer; }
+    .primary { width:100%; min-height:52px; border:0; border-radius:12px; background:var(--oio-core); color:#FFF; font-weight:600; cursor:pointer; box-shadow:0 5px 12px rgba(70,68,58,.12); } .primary:active { transform:scale(.99); } .primary:disabled { opacity:.65; cursor:wait; }
+    .link-btn { border:0; background:transparent; color:#35342F; text-decoration:underline; cursor:pointer; } .center { text-align:center; } .switch { margin-top:20px; color:var(--oio-muted); font-size:14px; }
+    .message { display:none; margin-bottom:18px; padding:12px 14px; border-radius:10px; font-size:14px; line-height:1.4; } .message.show { display:block; } .message.error { border:1px solid rgba(185,79,79,.55); color:#7D2525; background:rgba(185,79,79,.08); } .message.success { border:1px solid rgba(79,125,89,.55); color:#315D3A; background:rgba(79,125,89,.08); }
     .badge { display:inline-flex; padding:5px 9px; border:1px solid rgba(74,73,64,.35); border-radius:999px; font-size:11px; color:#56554F; margin-bottom:20px; }
-    .avatar-area { display:flex; justify-content:center; margin:4px 0 12px; }
-    .avatar-button { width:154px; height:154px; border:1px solid rgba(74,73,64,.35); border-radius:50%; background:var(--oio-core); display:grid; place-items:center; cursor:pointer; overflow:hidden; position:relative; padding:0; }
-    .avatar-button::after { content:'Foto'; position:absolute; bottom:12px; font-size:17px; color:#FFF; }
-    .avatar-icon { width:62px; height:62px; fill:#FFF; }
-    .avatar-preview { width:100%; height:100%; object-fit:cover; display:none; }
-    .avatar-button.has-photo .avatar-preview { display:block; }
-    .avatar-button.has-photo .avatar-icon { display:none; }
-    .avatar-button.has-photo::after { background:rgba(0,0,0,.40); left:0; right:0; bottom:0; padding:7px; }
-    .camera-note { margin:0 0 28px; text-align:center; color:#77766F; font-size:12px; }
-    .profile-name { text-align:center; font-size:28px; margin:0 0 7px; color:#202020; }
-    .profile-id { text-align:center; color:#77766F; font-size:13px; margin-bottom:28px; }
-    .profile-menu { border-top:1px solid rgba(74,73,64,.22); }
-    .profile-menu button { width:100%; min-height:58px; text-align:left; border:0; border-bottom:1px solid rgba(74,73,64,.16); background:rgba(255,255,255,.22); font-size:19px; cursor:pointer; padding:0 10px; }
-    .profile-menu button:hover { background:rgba(255,255,255,.38); }
-    .profile-menu .exit { margin-top:18px; color:#3D3C37; }
-    .avatar-choice-backdrop { display:none; position:fixed; inset:0; background:rgba(25,25,22,.52); z-index:100; align-items:flex-end; justify-content:center; padding:18px; }
-    .avatar-choice-backdrop.open { display:flex; }
-    .avatar-choice { width:min(100%,480px); background:#F4F2EA; border:1px solid rgba(74,73,64,.22); border-radius:20px; padding:18px; box-shadow:0 20px 60px rgba(50,48,40,.25); }
-    .avatar-choice h2 { margin:0 0 6px; font-size:20px; font-weight:500; color:#222; }
-    .avatar-choice p { margin:0 0 16px; color:#6B6A63; font-size:13px; }
-    .choice-btn { width:100%; min-height:54px; margin-top:10px; border:1px solid rgba(74,73,64,.22); border-radius:12px; background:rgba(255,255,255,.55); display:flex; align-items:center; gap:12px; padding:0 16px; cursor:pointer; text-align:left; }
-    .choice-btn svg { width:24px; height:24px; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
-    .choice-btn.close { justify-content:center; border-color:transparent; background:transparent; color:#6B6A63; }
+    .avatar-area { display:flex; justify-content:center; margin:4px 0 12px; } .avatar-button { width:154px; height:154px; border:1px solid rgba(74,73,64,.35); border-radius:50%; background:var(--oio-core); display:grid; place-items:center; cursor:pointer; overflow:hidden; position:relative; padding:0; } .avatar-button::after { content:'Foto'; position:absolute; bottom:12px; font-size:17px; color:#FFF; } .avatar-icon { width:62px; height:62px; fill:#FFF; } .avatar-preview { width:100%; height:100%; object-fit:cover; display:none; } .avatar-button.has-photo .avatar-preview { display:block; } .avatar-button.has-photo .avatar-icon { display:none; } .avatar-button.has-photo::after { background:rgba(0,0,0,.40); left:0; right:0; bottom:0; padding:7px; }
+    .camera-note { margin:0 0 28px; text-align:center; color:#77766F; font-size:12px; } .profile-name { text-align:center; font-size:28px; margin:0 0 7px; color:#202020; } .profile-id { text-align:center; color:#77766F; font-size:13px; margin-bottom:28px; } .profile-menu { border-top:1px solid rgba(74,73,64,.22); } .profile-menu button { width:100%; min-height:58px; text-align:left; border:0; border-bottom:1px solid rgba(74,73,64,.16); background:rgba(255,255,255,.22); font-size:19px; cursor:pointer; padding:0 10px; } .profile-menu button:hover { background:rgba(255,255,255,.38); } .profile-menu .exit { margin-top:18px; color:#3D3C37; }
+    .avatar-choice-backdrop { display:none; position:fixed; inset:0; background:rgba(25,25,22,.52); z-index:100; align-items:flex-end; justify-content:center; padding:18px; } .avatar-choice-backdrop.open { display:flex; } .avatar-choice { width:min(100%,480px); background:#F4F2EA; border:1px solid rgba(74,73,64,.22); border-radius:20px; padding:18px; box-shadow:0 20px 60px rgba(50,48,40,.25); } .avatar-choice h2 { margin:0 0 6px; font-size:20px; font-weight:500; color:#222; } .avatar-choice p { margin:0 0 16px; color:#6B6A63; font-size:13px; } .choice-btn { width:100%; min-height:54px; margin-top:10px; border:1px solid rgba(74,73,64,.22); border-radius:12px; background:rgba(255,255,255,.55); display:flex; align-items:center; gap:12px; padding:0 16px; cursor:pointer; text-align:left; } .choice-btn svg { width:24px; height:24px; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; } .choice-btn.close { justify-content:center; border-color:transparent; background:transparent; color:#6B6A63; }
     @media (max-width:420px) { .topbar{height:68px;padding:0 15px;gap:12px}.brand{font-size:21px}main{padding:26px 14px 42px}.card{padding:19px}.intro h1{font-size:30px} }
   </style>
 </head>
 <body>
   <div class="app">
-    <header class="topbar">
-      <button class="back" id="backBtn" aria-label="Voltar">‹</button>
-      <div class="brand">OIO ID</div>
-      <div class="spacer"></div>
-      <button class="menu-btn" aria-label="Mais opções">⋮</button>
-    </header>
+    <header class="topbar"><button class="back" id="backBtn" aria-label="Voltar">‹</button><div class="brand">OIO ID</div><div class="spacer"></div><button class="menu-btn" aria-label="Mais opções">⋮</button></header>
     <main>
       <section class="screen active" id="loginScreen">
-        <div class="intro"><span class="badge">FASE B.1 · PROTÓTIPO VISUAL</span><h1>Entrar</h1><p>Seu acesso central ao ecossistema OIO.</p></div>
-        <div class="card">
-          <div class="message" id="loginMessage"></div>
-          <form id="loginForm" novalidate>
-            <div class="field"><label for="loginEmail">E-mail</label><input id="loginEmail" type="email" autocomplete="email" placeholder="seu@email.com"></div>
-            <div class="field"><label for="loginPassword">Senha</label><div class="password-wrap"><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Sua senha"><button class="toggle-password" type="button" data-target="loginPassword" aria-label="Mostrar senha">◉</button></div></div>
-            <button class="primary" type="submit">ENTRAR</button>
-          </form>
+        <div class="intro"><span class="badge">FASE D.2 · LOGIN REAL</span><h1>Entrar</h1><p>Seu acesso central ao ecossistema OIO.</p></div>
+        <div class="card"><div class="message" id="loginMessage"></div>
+          <form id="loginForm" novalidate><div class="field"><label for="loginEmail">E-mail</label><input id="loginEmail" type="email" autocomplete="email" placeholder="seu@email.com"></div><div class="field"><label for="loginPassword">Senha</label><div class="password-wrap"><input id="loginPassword" type="password" autocomplete="current-password" placeholder="Sua senha"><button class="toggle-password" type="button" data-target="loginPassword" aria-label="Mostrar senha">◉</button></div></div><button class="primary" id="loginSubmit" type="submit">ENTRAR</button></form>
           <div class="center switch">Ainda não tem OIO ID? <button class="link-btn" type="button" data-go="registerScreen">Criar conta</button></div>
         </div>
       </section>
       <section class="screen" id="registerScreen">
-        <div class="intro"><span class="badge">FASE B.1 · SEM BANCO</span><h1>Criar OIO ID</h1><p>Layout preparado para a futura autenticação real.</p></div>
-        <div class="card">
-          <div class="message" id="registerMessage"></div>
-          <form id="registerForm" novalidate>
-            <div class="field"><label for="registerName">Nome</label><input id="registerName" type="text" autocomplete="name" placeholder="Seu nome"></div>
-            <div class="field"><label for="registerEmail">E-mail</label><input id="registerEmail" type="email" autocomplete="email" placeholder="seu@email.com"></div>
-            <div class="field"><label for="registerPassword">Senha</label><div class="password-wrap"><input id="registerPassword" type="password" autocomplete="new-password" placeholder="Crie uma senha"><button class="toggle-password" type="button" data-target="registerPassword" aria-label="Mostrar senha">◉</button></div></div>
-            <div class="field"><label for="registerPassword2">Confirmar senha</label><div class="password-wrap"><input id="registerPassword2" type="password" autocomplete="new-password" placeholder="Repita a senha"><button class="toggle-password" type="button" data-target="registerPassword2" aria-label="Mostrar senha">◉</button></div></div>
-            <button class="primary" id="registerSubmit" type="submit">CRIAR OIO ID</button>
-          </form>
+        <div class="intro"><span class="badge">FASE B.1 · SEM BANCO</span><h1>Criar OIO ID</h1><p>Layout preparado para a futura autenticação real.</p></div><div class="card"><div class="message" id="registerMessage"></div>
+          <form id="registerForm" novalidate><div class="field"><label for="registerName">Nome</label><input id="registerName" type="text" autocomplete="name" placeholder="Seu nome"></div><div class="field"><label for="registerEmail">E-mail</label><input id="registerEmail" type="email" autocomplete="email" placeholder="seu@email.com"></div><div class="field"><label for="registerPassword">Senha</label><div class="password-wrap"><input id="registerPassword" type="password" autocomplete="new-password" placeholder="Crie uma senha"><button class="toggle-password" type="button" data-target="registerPassword" aria-label="Mostrar senha">◉</button></div></div><div class="field"><label for="registerPassword2">Confirmar senha</label><div class="password-wrap"><input id="registerPassword2" type="password" autocomplete="new-password" placeholder="Repita a senha"><button class="toggle-password" type="button" data-target="registerPassword2" aria-label="Mostrar senha">◉</button></div></div><button class="primary" id="registerSubmit" type="submit">CRIAR OIO ID</button></form>
           <div class="center switch">Já possui OIO ID? <button class="link-btn" type="button" data-go="loginScreen">Entrar</button></div>
         </div>
       </section>
       <section class="screen" id="profileScreen">
-        <div class="intro"><span class="badge">OIO ID · PERFIL</span><h1>Meu perfil</h1><p>Identidade central do usuário OIO.</p></div>
-        <div class="card">
-          <div class="avatar-area"><button class="avatar-button" id="avatarButton" type="button" aria-label="Adicionar ou alterar foto do perfil"><svg class="avatar-icon" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="21" r="12"></circle><path d="M10 55c2-12 10-18 22-18s20 6 22 18H10z"></path></svg><img class="avatar-preview" id="avatarPreview" alt="Prévia da foto do perfil"></button></div>
-          <div class="camera-note">Toque na foto para escolher câmera ou galeria.</div>
-          <h2 class="profile-name" id="profileName">Michel</h2>
-          <div class="profile-id">OIO ID visual · ainda sem identidade persistente</div>
-          <nav class="profile-menu" aria-label="Menu do perfil"><button type="button" data-demo="OIO Core">OIO Core</button><button type="button" data-demo="Vitorino">Vitorino</button><button type="button" data-demo="Configurações">Configurações</button><button class="exit" type="button" id="logoutDemo">SAIR</button></nav>
-        </div>
+        <div class="intro"><span class="badge">OIO ID · PERFIL</span><h1>Meu perfil</h1><p>Identidade central do usuário OIO.</p></div><div class="card"><div class="avatar-area"><button class="avatar-button" id="avatarButton" type="button" aria-label="Adicionar ou alterar foto do perfil"><svg class="avatar-icon" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="21" r="12"></circle><path d="M10 55c2-12 10-18 22-18s20 6 22 18H10z"></path></svg><img class="avatar-preview" id="avatarPreview" alt="Prévia da foto do perfil"></button></div><div class="camera-note">Toque na foto para escolher câmera ou galeria.</div><h2 class="profile-name" id="profileName">Michel</h2><div class="profile-id">OIO ID visual · ainda sem identidade persistente</div><nav class="profile-menu" aria-label="Menu do perfil"><button type="button" data-demo="OIO Core">OIO Core</button><button type="button" data-demo="Vitorino">Vitorino</button><button type="button" data-demo="Configurações">Configurações</button><button class="exit" type="button" id="logoutDemo">SAIR</button></nav></div>
       </section>
     </main>
   </div>
-
-  <div class="avatar-choice-backdrop" id="avatarChoice" aria-hidden="true">
-    <div class="avatar-choice" role="dialog" aria-modal="true" aria-labelledby="avatarChoiceTitle">
-      <h2 id="avatarChoiceTitle">Foto do perfil</h2>
-      <p>Escolha de onde deseja pegar sua foto.</p>
-      <button class="choice-btn" id="cameraChoice" type="button"><svg viewBox="0 0 24 24"><path d="M4 7h3l1.5-2h3L13 7h3a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H4a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3Z"></path><circle cx="10" cy="13" r="3.2"></circle></svg><span>Tirar foto</span></button>
-      <button class="choice-btn" id="galleryChoice" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8" cy="9" r="1.5"></circle><path d="m4 17 5-5 3 3 2-2 6 5"></path></svg><span>Escolher da galeria</span></button>
-      <button class="choice-btn close" id="closeAvatarChoice" type="button">Fechar</button>
-    </div>
-  </div>
-
-  <input id="cameraInput" type="file" accept="image/*" capture="environment" hidden>
-  <input id="galleryInput" type="file" accept="image/*" hidden>
-
+  <div class="avatar-choice-backdrop" id="avatarChoice" aria-hidden="true"><div class="avatar-choice" role="dialog" aria-modal="true" aria-labelledby="avatarChoiceTitle"><h2 id="avatarChoiceTitle">Foto do perfil</h2><p>Escolha de onde deseja pegar sua foto.</p><button class="choice-btn" id="cameraChoice" type="button"><svg viewBox="0 0 24 24"><path d="M4 7h3l1.5-2h3L13 7h3a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3H4a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3Z"></path><circle cx="10" cy="13" r="3.2"></circle></svg><span>Tirar foto</span></button><button class="choice-btn" id="galleryChoice" type="button"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="8" cy="9" r="1.5"></circle><path d="m4 17 5-5 3 3 2-2 6 5"></path></svg><span>Escolher da galeria</span></button><button class="choice-btn close" id="closeAvatarChoice" type="button">Fechar</button></div></div>
+  <input id="cameraInput" type="file" accept="image/*" capture="environment" hidden><input id="galleryInput" type="file" accept="image/*" hidden>
   <script>
-    // OIO ID — FASE D.1
-    // Cadastro real conectado à API /api/auth/register. Login e sessão serão integrados em etapas separadas.
-    const screens=[...document.querySelectorAll('.screen')];
-    const backBtn=document.getElementById('backBtn');
-    let currentScreen='loginScreen';
-    function showScreen(id){ screens.forEach(s=>s.classList.toggle('active',s.id===id)); currentScreen=id; window.scrollTo({top:0,behavior:'smooth'}); }
+    // OIO ID — FASE D.2
+    // Cadastro e login reais conectados às APIs. Sessão persistente será validada na próxima etapa.
+    const screens=[...document.querySelectorAll('.screen')]; const backBtn=document.getElementById('backBtn'); let currentScreen='loginScreen';
+    function showScreen(id){screens.forEach(s=>s.classList.toggle('active',s.id===id));currentScreen=id;window.scrollTo({top:0,behavior:'smooth'});}
     document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>showScreen(b.dataset.go)));
     backBtn.addEventListener('click',()=>{if(currentScreen==='registerScreen'||currentScreen==='profileScreen')showScreen('loginScreen');});
     function message(el,text,type){el.textContent=text;el.className='message show '+type;}
     document.querySelectorAll('.toggle-password').forEach(b=>b.addEventListener('click',()=>{const i=document.getElementById(b.dataset.target),v=i.type==='text';i.type=v?'password':'text';b.setAttribute('aria-label',v?'Mostrar senha':'Ocultar senha');b.textContent=v?'◉':'◌';}));
-    document.getElementById('loginForm').addEventListener('submit',e=>{e.preventDefault();message(document.getElementById('loginMessage'),'ENTRAR ainda será conectado ao login real na próxima etapa.','success');});
+
+    document.getElementById('loginForm').addEventListener('submit',async e=>{
+      e.preventDefault();
+      const email=document.getElementById('loginEmail').value.trim().toLowerCase();
+      const senha=document.getElementById('loginPassword').value;
+      const submit=document.getElementById('loginSubmit'); const loginMessage=document.getElementById('loginMessage');
+      if(!email||!senha){message(loginMessage,'Preencha e-mail e senha.','error');return;}
+      submit.disabled=true; submit.textContent='ENTRANDO...';
+      try{
+        const response=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({email,senha})});
+        const data=await response.json().catch(()=>({}));
+        if(!response.ok){message(loginMessage,data.error||'Não foi possível realizar o login.','error');return;}
+        document.getElementById('profileName').textContent=data.account?.nome||'Usuário OIO';
+        showScreen('profileScreen');
+      }catch(error){console.error('OIO ID login request error:',error);message(loginMessage,'Não foi possível conectar ao login. Verifique sua conexão e tente novamente.','error');}
+      finally{submit.disabled=false;submit.textContent='ENTRAR';}
+    });
 
     document.getElementById('registerForm').addEventListener('submit',async e=>{
       e.preventDefault();
-
-      const name=document.getElementById('registerName').value.trim();
-      const email=document.getElementById('registerEmail').value.trim().toLowerCase();
-      const password=document.getElementById('registerPassword').value;
-      const password2=document.getElementById('registerPassword2').value;
-      const submit=document.getElementById('registerSubmit');
-      const registerMessage=document.getElementById('registerMessage');
-
-      if(!name||!email||!password){
-        message(registerMessage,'Preencha nome, e-mail e senha.','error');
-        return;
-      }
-      if(password.length<8){
-        message(registerMessage,'A senha deve ter pelo menos 8 caracteres.','error');
-        return;
-      }
-      if(password!==password2){
-        message(registerMessage,'As senhas não coincidem.','error');
-        return;
-      }
-
-      submit.disabled=true;
-      submit.textContent='CRIANDO...';
-
-      try{
-        const response=await fetch('/api/auth/register',{
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          credentials:'same-origin',
-          body:JSON.stringify({nome:name,email,senha:password})
-        });
-
-        const data=await response.json().catch(()=>({}));
-
-        if(!response.ok){
-          message(registerMessage,data.error||'Não foi possível criar o OIO ID.','error');
-          return;
-        }
-
-        document.getElementById('loginEmail').value=email;
-        document.getElementById('loginPassword').value='';
-        showScreen('loginScreen');
-        message(document.getElementById('loginMessage'),`OIO ID criado com sucesso. Agora entre com ${data.account?.email||email}.`,'success');
-      }catch(error){
-        console.error('OIO ID register request error:',error);
-        message(registerMessage,'Não foi possível conectar ao cadastro. Verifique sua conexão e tente novamente.','error');
-      }finally{
-        submit.disabled=false;
-        submit.textContent='CRIAR OIO ID';
-      }
+      const name=document.getElementById('registerName').value.trim(); const email=document.getElementById('registerEmail').value.trim().toLowerCase(); const password=document.getElementById('registerPassword').value; const password2=document.getElementById('registerPassword2').value; const submit=document.getElementById('registerSubmit'); const registerMessage=document.getElementById('registerMessage');
+      if(!name||!email||!password){message(registerMessage,'Preencha nome, e-mail e senha.','error');return;} if(password.length<8){message(registerMessage,'A senha deve ter pelo menos 8 caracteres.','error');return;} if(password!==password2){message(registerMessage,'As senhas não coincidem.','error');return;}
+      submit.disabled=true;submit.textContent='CRIANDO...';
+      try{const response=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({nome:name,email,senha:password})});const data=await response.json().catch(()=>({}));if(!response.ok){message(registerMessage,data.error||'Não foi possível criar o OIO ID.','error');return;}document.getElementById('loginEmail').value=email;document.getElementById('loginPassword').value='';showScreen('loginScreen');message(document.getElementById('loginMessage'),`OIO ID criado com sucesso. Agora entre com ${data.account?.email||email}.`,'success');}catch(error){console.error('OIO ID register request error:',error);message(registerMessage,'Não foi possível conectar ao cadastro. Verifique sua conexão e tente novamente.','error');}finally{submit.disabled=false;submit.textContent='CRIAR OIO ID';}
     });
 
     document.querySelectorAll('[data-demo]').forEach(b=>b.addEventListener('click',()=>message(document.getElementById('loginMessage'),`${b.dataset.demo}: área visual preparada para a próxima fase.`,'success')));
     document.getElementById('logoutDemo').addEventListener('click',()=>{showScreen('loginScreen');message(document.getElementById('loginMessage'),'SAIR ainda é visual nesta fase. Sessão real será integrada posteriormente.','success');});
     const avatarButton=document.getElementById('avatarButton'),avatarChoice=document.getElementById('avatarChoice'),cameraInput=document.getElementById('cameraInput'),galleryInput=document.getElementById('galleryInput'),avatarPreview=document.getElementById('avatarPreview');
-    function openAvatarChoice(){avatarChoice.classList.add('open');avatarChoice.setAttribute('aria-hidden','false');}
-    function closeAvatarChoice(){avatarChoice.classList.remove('open');avatarChoice.setAttribute('aria-hidden','true');}
+    function openAvatarChoice(){avatarChoice.classList.add('open');avatarChoice.setAttribute('aria-hidden','false');} function closeAvatarChoice(){avatarChoice.classList.remove('open');avatarChoice.setAttribute('aria-hidden','true');}
     avatarButton.addEventListener('click',openAvatarChoice);document.getElementById('closeAvatarChoice').addEventListener('click',closeAvatarChoice);avatarChoice.addEventListener('click',e=>{if(e.target===avatarChoice)closeAvatarChoice();});document.getElementById('cameraChoice').addEventListener('click',()=>{closeAvatarChoice();cameraInput.click();});document.getElementById('galleryChoice').addEventListener('click',()=>{closeAvatarChoice();galleryInput.click();});
-    function previewAvatar(file){if(!file)return;const reader=new FileReader();reader.onload=()=>{avatarPreview.src=reader.result;avatarButton.classList.add('has-photo');};reader.readAsDataURL(file);}
-    cameraInput.addEventListener('change',()=>previewAvatar(cameraInput.files[0]));galleryInput.addEventListener('change',()=>previewAvatar(galleryInput.files[0]));
+    function previewAvatar(file){if(!file)return;const reader=new FileReader();reader.onload=()=>{avatarPreview.src=reader.result;avatarButton.classList.add('has-photo');};reader.readAsDataURL(file);} cameraInput.addEventListener('change',()=>previewAvatar(cameraInput.files[0]));galleryInput.addEventListener('change',()=>previewAvatar(galleryInput.files[0]));
   </script>
 </body>
 </html>
