@@ -6,10 +6,8 @@
   <meta name="theme-color" content="#AAA99A">
   <title>OIO ID — Protótipo Visual</title>
   <style>
-    :root {
-      --oio-core: #AAA99A; --oio-core-dark: #979688; --oio-line: rgba(125,123,100,.18); --oio-white: #202020; --oio-muted: #5F5E58; --oio-blue: #0879DF; --oio-danger: #B94F4F; --oio-success: #4F7D59; --oio-black: #F3F1E9; --oio-panel: rgba(255,255,255,.34); --oio-field: rgba(255,255,255,.72); --oio-border: rgba(74,73,64,.22);
-    }
-    * { box-sizing: border-box; }
+    :root { --oio-core:#AAA99A; --oio-core-dark:#979688; --oio-line:rgba(125,123,100,.18); --oio-white:#202020; --oio-muted:#5F5E58; --oio-blue:#0879DF; --oio-danger:#B94F4F; --oio-success:#4F7D59; --oio-black:#F3F1E9; --oio-panel:rgba(255,255,255,.34); --oio-field:rgba(255,255,255,.72); --oio-border:rgba(74,73,64,.22); }
+    * { box-sizing:border-box; }
     html,body { margin:0; min-height:100%; background:var(--oio-black); color:var(--oio-white); font-family:Arial,Helvetica,sans-serif; }
     body { min-height:100vh; overflow-x:hidden; }
     button,input { font:inherit; } button { color:inherit; }
@@ -50,7 +48,7 @@
         </div>
       </section>
       <section class="screen" id="profileScreen">
-        <div class="intro"><span class="badge">OIO ID · PERFIL</span><h1>Meu perfil</h1><p>Identidade central do usuário OIO.</p></div><div class="card"><div class="avatar-area"><button class="avatar-button" id="avatarButton" type="button" aria-label="Adicionar ou alterar foto do perfil"><svg class="avatar-icon" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="21" r="12"></circle><path d="M10 55c2-12 10-18 22-18s20 6 22 18H10z"></path></svg><img class="avatar-preview" id="avatarPreview" alt="Prévia da foto do perfil"></button></div><div class="camera-note">Toque na foto para escolher câmera ou galeria.</div><h2 class="profile-name" id="profileName">Michel</h2><div class="profile-id">OIO ID visual · ainda sem identidade persistente</div><nav class="profile-menu" aria-label="Menu do perfil"><button type="button" data-demo="OIO Core">OIO Core</button><button type="button" data-demo="Vitorino">Vitorino</button><button type="button" data-demo="Configurações">Configurações</button><button class="exit" type="button" id="logoutDemo">SAIR</button></nav></div>
+        <div class="intro"><span class="badge">OIO ID · PERFIL</span><h1>Meu perfil</h1><p>Identidade central do usuário OIO.</p></div><div class="card"><div class="avatar-area"><button class="avatar-button" id="avatarButton" type="button" aria-label="Adicionar ou alterar foto do perfil"><svg class="avatar-icon" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="21" r="12"></circle><path d="M10 55c2-12 10-18 22-18s20 6 22 18H10z"></path></svg><img class="avatar-preview" id="avatarPreview" alt="Prévia da foto do perfil"></button></div><div class="camera-note">Toque na foto para escolher câmera ou galeria.</div><h2 class="profile-name" id="profileName">Michel</h2><div class="profile-id">OIO ID · identidade central</div><nav class="profile-menu" aria-label="Menu do perfil"><button type="button" data-action="core">OIO Core</button><button type="button" data-action="vitorino">Vitorino</button><button type="button" data-action="config">Configurações</button><button class="exit" type="button" id="logoutDemo">SAIR</button></nav></div>
       </section>
     </main>
   </div>
@@ -76,25 +74,20 @@
           if(avatarUrl){document.getElementById('avatarPreview').src=avatarUrl;document.getElementById('avatarButton').classList.add('has-photo');}
           showScreen('profileScreen');
         }
-      }catch(error){
-        console.error('OIO ID session check error:',error);
-      }
+      }catch(error){ console.error('OIO ID session check error:',error); }
     }
     checkSession();
 
     document.getElementById('loginForm').addEventListener('submit',async e=>{
       e.preventDefault();
-      const email=document.getElementById('loginEmail').value.trim().toLowerCase();
-      const senha=document.getElementById('loginPassword').value;
-      const submit=document.getElementById('loginSubmit'); const loginMessage=document.getElementById('loginMessage');
+      const email=document.getElementById('loginEmail').value.trim().toLowerCase(); const senha=document.getElementById('loginPassword').value; const submit=document.getElementById('loginSubmit'); const loginMessage=document.getElementById('loginMessage');
       if(!email||!senha){message(loginMessage,'Preencha e-mail e senha.','error');return;}
       submit.disabled=true; submit.textContent='ENTRANDO...';
       try{
         const response=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({email,senha})});
         const data=await response.json().catch(()=>({}));
         if(!response.ok){message(loginMessage,data.error||'Não foi possível realizar o login.','error');return;}
-        document.getElementById('profileName').textContent=data.account?.nome||'Usuário OIO';
-        showScreen('profileScreen');
+        document.getElementById('profileName').textContent=data.account?.nome||'Usuário OIO'; showScreen('profileScreen');
       }catch(error){console.error('OIO ID login request error:',error);message(loginMessage,'Não foi possível conectar ao login. Verifique sua conexão e tente novamente.','error');}
       finally{submit.disabled=false;submit.textContent='ENTRAR';}
     });
@@ -103,16 +96,21 @@
       e.preventDefault();
       const name=document.getElementById('registerName').value.trim(); const email=document.getElementById('registerEmail').value.trim().toLowerCase(); const password=document.getElementById('registerPassword').value; const password2=document.getElementById('registerPassword2').value; const submit=document.getElementById('registerSubmit'); const registerMessage=document.getElementById('registerMessage');
       if(!name||!email||!password){message(registerMessage,'Preencha nome, e-mail e senha.','error');return;} if(password.length<8){message(registerMessage,'A senha deve ter pelo menos 8 caracteres.','error');return;} if(password!==password2){message(registerMessage,'As senhas não coincidem.','error');return;}
-      submit.disabled=true;submit.textContent='CRIANDO...';
-      try{const response=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({nome:name,email,senha:password})});const data=await response.json().catch(()=>({}));if(!response.ok){message(registerMessage,data.error||'Não foi possível criar o OIO ID.','error');return;}document.getElementById('loginEmail').value=email;document.getElementById('loginPassword').value='';showScreen('loginScreen');message(document.getElementById('loginMessage'),`OIO ID criado com sucesso. Agora entre com ${data.account?.email||email}.`,'success');}catch(error){console.error('OIO ID register request error:',error);message(registerMessage,'Não foi possível conectar ao cadastro. Verifique sua conexão e tente novamente.','error');}finally{submit.disabled=false;submit.textContent='CRIAR OIO ID';}
+      submit.disabled=true; submit.textContent='CRIANDO...';
+      try{const response=await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({nome:name,email,senha:password})}); const data=await response.json().catch(()=>({})); if(!response.ok){message(registerMessage,data.error||'Não foi possível criar o OIO ID.','error');return;} document.getElementById('loginEmail').value=email; document.getElementById('loginPassword').value=''; showScreen('loginScreen'); message(document.getElementById('loginMessage'),`OIO ID criado com sucesso. Agora entre com ${data.account?.email||email}.`,'success');}
+      catch(error){console.error('OIO ID register request error:',error);message(registerMessage,'Não foi possível conectar ao cadastro. Verifique sua conexão e tente novamente.','error');}
+      finally{submit.disabled=false;submit.textContent='CRIAR OIO ID';}
     });
 
-    document.querySelectorAll('[data-demo]').forEach(b=>b.addEventListener('click',()=>message(document.getElementById('loginMessage'),`${b.dataset.demo}: área visual preparada para a próxima fase.`,'success')));
+    document.querySelector('[data-action="core"]').addEventListener('click',()=>{window.location.href='/';});
+    document.querySelector('[data-action="vitorino"]').addEventListener('click',()=>{window.location.href='https://detiillimichel-max.github.io/Vitorino-vitrines/';});
+    document.querySelector('[data-action="config"]').addEventListener('click',()=>message(document.getElementById('loginMessage'),'Configurações ficará para a última etapa, como planejado.','success'));
     document.getElementById('logoutDemo').addEventListener('click',()=>{showScreen('loginScreen');message(document.getElementById('loginMessage'),'SAIR ainda é visual nesta fase. Sessão real será integrada posteriormente.','success');});
+
     const avatarButton=document.getElementById('avatarButton'),avatarChoice=document.getElementById('avatarChoice'),cameraInput=document.getElementById('cameraInput'),galleryInput=document.getElementById('galleryInput'),avatarPreview=document.getElementById('avatarPreview');
     function openAvatarChoice(){avatarChoice.classList.add('open');avatarChoice.setAttribute('aria-hidden','false');} function closeAvatarChoice(){avatarChoice.classList.remove('open');avatarChoice.setAttribute('aria-hidden','true');}
-    avatarButton.addEventListener('click',openAvatarChoice);document.getElementById('closeAvatarChoice').addEventListener('click',closeAvatarChoice);avatarChoice.addEventListener('click',e=>{if(e.target===avatarChoice)closeAvatarChoice();});document.getElementById('cameraChoice').addEventListener('click',()=>{closeAvatarChoice();cameraInput.click();});document.getElementById('galleryChoice').addEventListener('click',()=>{closeAvatarChoice();galleryInput.click();});
-    function previewAvatar(file){if(!file)return;const reader=new FileReader();reader.onload=()=>{avatarPreview.src=reader.result;avatarButton.classList.add('has-photo');};reader.readAsDataURL(file);} cameraInput.addEventListener('change',()=>previewAvatar(cameraInput.files[0]));galleryInput.addEventListener('change',()=>previewAvatar(galleryInput.files[0]));
+    avatarButton.addEventListener('click',openAvatarChoice); document.getElementById('closeAvatarChoice').addEventListener('click',closeAvatarChoice); avatarChoice.addEventListener('click',e=>{if(e.target===avatarChoice)closeAvatarChoice();}); document.getElementById('cameraChoice').addEventListener('click',()=>{closeAvatarChoice();cameraInput.click();}); document.getElementById('galleryChoice').addEventListener('click',()=>{closeAvatarChoice();galleryInput.click();});
+    function previewAvatar(file){if(!file)return;const reader=new FileReader();reader.onload=()=>{avatarPreview.src=reader.result;avatarButton.classList.add('has-photo');};reader.readAsDataURL(file);} cameraInput.addEventListener('change',()=>previewAvatar(cameraInput.files[0])); galleryInput.addEventListener('change',()=>previewAvatar(galleryInput.files[0]));
   </script>
 </body>
 </html>
