@@ -51,6 +51,7 @@
     .toggle-password { position:absolute; right:8px; top:7px; width:38px; height:38px; border:0; background:transparent; color:#5B5A54; cursor:pointer; }
     .primary { width:100%; min-height:52px; border:0; border-radius:12px; background:var(--oio-core); color:#FFF; font-weight:600; cursor:pointer; box-shadow:0 5px 12px rgba(70,68,58,.12); }
     .primary:active { transform:scale(.99); }
+    .primary:disabled { opacity:.65; cursor:wait; }
     .link-btn { border:0; background:transparent; color:#35342F; text-decoration:underline; cursor:pointer; }
     .center { text-align:center; }
     .switch { margin-top:20px; color:var(--oio-muted); font-size:14px; }
@@ -115,7 +116,7 @@
             <div class="field"><label for="registerEmail">E-mail</label><input id="registerEmail" type="email" autocomplete="email" placeholder="seu@email.com"></div>
             <div class="field"><label for="registerPassword">Senha</label><div class="password-wrap"><input id="registerPassword" type="password" autocomplete="new-password" placeholder="Crie uma senha"><button class="toggle-password" type="button" data-target="registerPassword" aria-label="Mostrar senha">◉</button></div></div>
             <div class="field"><label for="registerPassword2">Confirmar senha</label><div class="password-wrap"><input id="registerPassword2" type="password" autocomplete="new-password" placeholder="Repita a senha"><button class="toggle-password" type="button" data-target="registerPassword2" aria-label="Mostrar senha">◉</button></div></div>
-            <button class="primary" type="submit">CRIAR OIO ID</button>
+            <button class="primary" id="registerSubmit" type="submit">CRIAR OIO ID</button>
           </form>
           <div class="center switch">Já possui OIO ID? <button class="link-btn" type="button" data-go="loginScreen">Entrar</button></div>
         </div>
@@ -147,8 +148,8 @@
   <input id="galleryInput" type="file" accept="image/*" hidden>
 
   <script>
-    // OIO ID — FASE B.1
-    // Protótipo 100% local. Não conecta a banco, Cloudinary ou autenticação.
+    // OIO ID — FASE D.1
+    // Cadastro real conectado à API /api/auth/register. Login e sessão serão integrados em etapas separadas.
     const screens=[...document.querySelectorAll('.screen')];
     const backBtn=document.getElementById('backBtn');
     let currentScreen='loginScreen';
@@ -157,10 +158,64 @@
     backBtn.addEventListener('click',()=>{if(currentScreen==='registerScreen'||currentScreen==='profileScreen')showScreen('loginScreen');});
     function message(el,text,type){el.textContent=text;el.className='message show '+type;}
     document.querySelectorAll('.toggle-password').forEach(b=>b.addEventListener('click',()=>{const i=document.getElementById(b.dataset.target),v=i.type==='text';i.type=v?'password':'text';b.setAttribute('aria-label',v?'Mostrar senha':'Ocultar senha');b.textContent=v?'◉':'◌';}));
-    document.getElementById('loginForm').addEventListener('submit',e=>{e.preventDefault();message(document.getElementById('loginMessage'),'ENTRAR é apenas visual nesta FASE B.1. Nenhuma sessão real existe.','success');});
-    document.getElementById('registerForm').addEventListener('submit',e=>{e.preventDefault();const n=document.getElementById('registerName').value.trim(),email=document.getElementById('registerEmail').value.trim(),p=document.getElementById('registerPassword').value,p2=document.getElementById('registerPassword2').value;if(!n||!email||!p){message(document.getElementById('registerMessage'),'Preencha nome, e-mail e senha.','error');return;}if(p!==p2){message(document.getElementById('registerMessage'),'As senhas não coincidem.','error');return;}document.getElementById('profileName').textContent=n;showScreen('profileScreen');});
+    document.getElementById('loginForm').addEventListener('submit',e=>{e.preventDefault();message(document.getElementById('loginMessage'),'ENTRAR ainda será conectado ao login real na próxima etapa.','success');});
+
+    document.getElementById('registerForm').addEventListener('submit',async e=>{
+      e.preventDefault();
+
+      const name=document.getElementById('registerName').value.trim();
+      const email=document.getElementById('registerEmail').value.trim().toLowerCase();
+      const password=document.getElementById('registerPassword').value;
+      const password2=document.getElementById('registerPassword2').value;
+      const submit=document.getElementById('registerSubmit');
+      const registerMessage=document.getElementById('registerMessage');
+
+      if(!name||!email||!password){
+        message(registerMessage,'Preencha nome, e-mail e senha.','error');
+        return;
+      }
+      if(password.length<8){
+        message(registerMessage,'A senha deve ter pelo menos 8 caracteres.','error');
+        return;
+      }
+      if(password!==password2){
+        message(registerMessage,'As senhas não coincidem.','error');
+        return;
+      }
+
+      submit.disabled=true;
+      submit.textContent='CRIANDO...';
+
+      try{
+        const response=await fetch('/api/auth/register',{
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          credentials:'same-origin',
+          body:JSON.stringify({nome:name,email,senha:password})
+        });
+
+        const data=await response.json().catch(()=>({}));
+
+        if(!response.ok){
+          message(registerMessage,data.error||'Não foi possível criar o OIO ID.','error');
+          return;
+        }
+
+        document.getElementById('loginEmail').value=email;
+        document.getElementById('loginPassword').value='';
+        showScreen('loginScreen');
+        message(document.getElementById('loginMessage'),`OIO ID criado com sucesso. Agora entre com ${data.account?.email||email}.`,'success');
+      }catch(error){
+        console.error('OIO ID register request error:',error);
+        message(registerMessage,'Não foi possível conectar ao cadastro. Verifique sua conexão e tente novamente.','error');
+      }finally{
+        submit.disabled=false;
+        submit.textContent='CRIAR OIO ID';
+      }
+    });
+
     document.querySelectorAll('[data-demo]').forEach(b=>b.addEventListener('click',()=>message(document.getElementById('loginMessage'),`${b.dataset.demo}: área visual preparada para a próxima fase.`,'success')));
-    document.getElementById('logoutDemo').addEventListener('click',()=>{showScreen('loginScreen');message(document.getElementById('loginMessage'),'SAIR é apenas visual nesta FASE B.1. Nenhuma sessão real existe.','success');});
+    document.getElementById('logoutDemo').addEventListener('click',()=>{showScreen('loginScreen');message(document.getElementById('loginMessage'),'SAIR ainda é visual nesta fase. Sessão real será integrada posteriormente.','success');});
     const avatarButton=document.getElementById('avatarButton'),avatarChoice=document.getElementById('avatarChoice'),cameraInput=document.getElementById('cameraInput'),galleryInput=document.getElementById('galleryInput'),avatarPreview=document.getElementById('avatarPreview');
     function openAvatarChoice(){avatarChoice.classList.add('open');avatarChoice.setAttribute('aria-hidden','false');}
     function closeAvatarChoice(){avatarChoice.classList.remove('open');avatarChoice.setAttribute('aria-hidden','true');}
