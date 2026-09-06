@@ -2,7 +2,7 @@
 
 > Documento de continuidade técnica. Este arquivo registra a ordem oficial das próximas integrações e deve refletir somente o estado realmente concluído e testado.
 
-**Próxima fase ativa: FASE 1 — OIO ID + identidade central.**
+**Estado atual: grande parte da infraestrutura já foi construída. A próxima tarefa real é o fechamento da identidade/avatar e, em seguida, o bloqueio de acesso do Core por sessão OIO ID.**
 
 ---
 
@@ -29,24 +29,39 @@ Construir o ecossistema OIO com uma identidade central e integrações separadas
 
 # 🔵 FASE 1 — OIO ID + identidade central
 
-**STATUS: ▶️ PRÓXIMA FASE**
+**STATUS: 🟡 EM FECHAMENTO**
 
-### Objetivo
+### Já concluído e testado
 
-Completar a identidade persistente do OIO ID para os usuários existentes e preparar a identidade para ser consumida pelo OIO Core.
+- ☑️ Nome persistente no perfil
+- ☑️ E-mail persistente
+- ☑️ Senha com hash no backend
+- ☑️ OIO ID único por conta
+- ☑️ Estrutura `accounts` no Turso
+- ☑️ Estrutura `credentials` no Turso
+- ☑️ Estrutura `profiles` no Turso
+- ☑️ Estrutura `sessions` no Turso
+- ☑️ Estrutura `auth_events` no Turso
+- ☑️ Cadastro real `/api/auth/register`
+- ☑️ Login real `/api/auth/login`
+- ☑️ Verificação real `/api/auth/session`
+- ☑️ Cookie de sessão HttpOnly/Secure
+- ☑️ Sessão persistente
+- ☑️ Validade absoluta de 30 dias
+- ☑️ OIO ID abre diretamente no perfil quando existe sessão válida
+- ☑️ OIO ID visual aprovado
+- ☑️ Avatar com câmera/galeria no OIO ID
+- ☑️ Navegação OIO ID → OIO Core
+- ☑️ Navegação OIO ID → Vitorino Vitrines
 
-### Identidade de cada usuário
+### Ainda falta fechar
 
-- [ ] Nome persistente
-- [ ] E-mail persistente
-- [ ] Senha com hash no backend
-- [ ] OIO ID único
 - [ ] Foto de perfil persistente
 - [ ] Avatar enviado ao Cloudinary
 - [ ] `avatar_url` salvo no perfil do Turso
 - [ ] `avatar_public_id` salvo no perfil do Turso
 - [ ] Recuperação da foto ao abrir novamente o OIO ID
-- [ ] Testar com os 2 usuários
+- [ ] Testar identidade completa com os 2 usuários
 
 ### Arquitetura do avatar
 
@@ -64,27 +79,32 @@ Usuário escolhe foto
 
 ### Critério de conclusão
 
-A fase só passa para ☑️ quando os dois usuários conseguirem entrar no OIO ID e a foto, nome e identidade forem recuperados corretamente após sair e entrar novamente.
+A fase passa para ☑️ quando os dois usuários conseguirem entrar no OIO ID e nome, identidade e foto forem recuperados corretamente após sair e entrar novamente.
 
 ---
 
 # 🟢 FASE 2 — OIO ID → OIO Core
 
-**STATUS: ⏳ AGUARDANDO FASE 1**
+**STATUS: 🟡 PARCIALMENTE CONCLUÍDA**
 
-### Objetivo
+### Já concluído
 
-Fazer o OIO Core consumir a identidade oficial do OIO ID.
+- ☑️ OIO ID possui sessão real
+- ☑️ OIO ID consegue abrir o OIO Core
+- ☑️ Usuário autenticado consegue entrar no Core sem novo login
+- ☑️ Fluxo OIO ID → OIO Core preservado
 
-- [ ] Core reconhecer sessão OIO ID
-- [ ] Nome do OIO ID no Core
-- [ ] OIO ID disponível para o Core
-- [ ] Avatar do OIO ID no Core
+### Falta
+
+- [ ] Core reconhecer e consumir a sessão OIO ID internamente
+- [ ] Nome oficial do OIO ID no Core
+- [ ] OIO ID disponível para as APIs do Core
+- [ ] Avatar oficial do OIO ID no Core
 - [ ] Avatar real no CHAT
 - [ ] Remover dependência da identidade antiga para representar o usuário
 - [ ] Testar os 2 usuários
 
-### Fluxo
+### Fluxo final
 
 ```text
 OIO ID
@@ -102,7 +122,7 @@ CHAT
 
 # 🔐 FASE 3 — Segurança de acesso ao OIO Core
 
-**STATUS: ⏳ AGUARDANDO FASE 2**
+**STATUS: 🔴 PRÓXIMA IMPLEMENTAÇÃO CRÍTICA**
 
 ### Objetivo
 
@@ -115,7 +135,7 @@ Impedir qualquer acesso ao OIO Core sem uma sessão OIO ID válida.
 - [ ] Sem sessão → encaminhar para OIO ID
 - [ ] Sessão expirada → encaminhar para OIO ID
 - [ ] Sessão revogada → encaminhar para OIO ID
-- [ ] Manter validade absoluta de 30 dias
+- ☑️ Manter validade absoluta de 30 dias
 - [ ] Testar acesso sem login
 - [ ] Testar sessão expirada
 
@@ -131,17 +151,27 @@ Impedir qualquer acesso ao OIO Core sem uma sessão OIO ID válida.
         entra direto     OIO ID
 ```
 
+**Importante:** a proteção deve considerar também acesso direto a `teste.html` e a abertura pelo PWA. Não basta proteger apenas o `index.html`.
+
 ---
 
 # 🟣 FASE 4 — Ably / realtime
 
-**STATUS: ⏳ AGUARDANDO FASE 3**
+**STATUS: 🟡 INFRAESTRUTURA PREPARADA**
 
-### Objetivo
+### Já concluído
 
-Adicionar realtime verdadeiro ao CHAT sem usar Supabase Realtime.
+- ☑️ Aplicação Ably criada para o OIO Core
+- ☑️ API key dedicada do servidor configurada
+- ☑️ Capacidades necessárias selecionadas para realtime
+- ☑️ `ABLY_API_KEY` configurada no backend/Vercel
+- ☑️ `/api/ably-health`
+- ☑️ Validação Vercel → Ably
+- ☑️ Emissão de token de validação
 
-- [ ] `/api/ably-token`
+### Falta
+
+- [ ] `/api/ably-token` definitivo
 - [ ] Validar sessão OIO ID antes de emitir token
 - [ ] `clientId` baseado no OIO ID autenticado
 - [ ] Presença online
@@ -166,41 +196,94 @@ OIO ID      → identidade e sessão
 
 # 💬 FASE 5 — CHAT + identidade OIO
 
-**STATUS: ⏳ AGUARDANDO FASE 4**
+**STATUS: 🟢 CHAT BASE CONCLUÍDO / REALTIME PENDENTE**
 
-- [ ] Avatar oficial
-- [ ] Nome oficial
-- [ ] Presença
+### Já concluído e validado
+
+- ☑️ Chat por texto
+- ☑️ Persistência no Turso
+- ☑️ Envio de fotos
+- ☑️ Upload de fotos no Cloudinary
+- ☑️ Gravação de áudio
+- ☑️ Pré-visualização antes do envio
+- ☑️ Excluir / continuar / enviar áudio
+- ☑️ Upload de áudio no Cloudinary
+- ☑️ Player personalizado para áudio enviado
+- ☑️ Descrição/caption associada à mídia
+- ☑️ Web Push
+- ☑️ Service Worker
+- ☑️ Badge de não lidas quando suportado
+- ☑️ Ação Responder da notificação
+- ☑️ Regra de uma reprodução de áudio por vez
+
+### Falta
+
+- [ ] Avatar oficial do OIO ID
+- [ ] Nome oficial do OIO ID
+- [ ] Presença realtime
 - [ ] Digitando em realtime
-- [ ] Mensagens
-- [ ] Fotos
-- [ ] Áudio
-- [ ] Web Push
-- [ ] Responder
-- [ ] Teste completo entre os 2 usuários
+- [ ] Indicador visual de digitação
+- [ ] Teste completo entre os 2 usuários com Ably
 
 ---
 
-# 🛍️ FASE 6 — Vitorino Vitrines
+# 🎬 FASE 6 — VÍDEOS
 
-**STATUS: ⏳ POSTERIOR**
+**STATUS: ☑️ CONCLUÍDA / VALIDADA**
+
+- ☑️ Feed vertical
+- ☑️ Upload autorizado
+- ☑️ Cloudinary para mídia
+- ☑️ Turso para metadados
+- ☑️ Limite de 10 vídeos publicados
+- ☑️ Limite de 30 segundos
+- ☑️ Limite de 30 MB
+- ☑️ Descrição de até 100 caracteres
+- ☑️ Exclusão administrativa
+- ☑️ Remoção do ativo no Cloudinary
+- ☑️ Controle de áudio entre vídeos
+- ☑️ Fluxo administrativo protegido por senha
+
+---
+
+# 🎮 FASE 7 — ARCADE
+
+**STATUS: ☑️ CONCLUÍDA / PRESERVADA**
+
+- ☑️ Módulo ARCADE existente
+- ☑️ Hub de jogos/experiências
+- ☑️ Preservação do módulo durante as evoluções do Core
+
+---
+
+# 🛍️ FASE 8 — Vitorino Vitrines
+
+**STATUS: 🟡 ACESSO CONECTADO / INTEGRAÇÃO FUTURA**
 
 O Vitorino permanece como projeto independente.
 
-- [ ] Integração de acesso pelo OIO ID
-- [ ] Identidade central quando necessária
-- [ ] Preparação de autorização de vendedor
-- [ ] Cloudinary para mídia
-- [ ] Turso para dados
-- [ ] Vercel para backend
-- [ ] Ably quando necessário
+### Já concluído
+
+- ☑️ Repositório independente
+- ☑️ Separação física do código
+- ☑️ Acesso pelo perfil do OIO ID
+- ☑️ OIO Core mantém a Loja como ponto de acesso
+
+### Falta
+
+- [ ] Identidade central do OIO ID no Vitorino
+- [ ] Autorização de vendedor
+- [ ] Fluxo de publicação por usuário autenticado
+- [ ] Cloudinary para mídia do Vitorino conforme arquitetura do projeto
+- [ ] Turso para dados do Vitorino conforme arquitetura do projeto
+- [ ] Ably quando houver necessidade real
 - [ ] Pagamento somente no final
 
 **Regra:** não misturar fisicamente o código do Vitorino com o repositório do OIO Core.
 
 ---
 
-# 🌐 FASE 7 — Integrações de conteúdo e serviços
+# 🌐 FASE 9 — Integrações de conteúdo e serviços
 
 **STATUS: ⏳ POSTERIOR**
 
@@ -236,13 +319,27 @@ Possíveis grupos:
 
 ---
 
-# 📌 Estado atual
+# 📌 PRÓXIMO PASSO OFICIAL
 
-**FASE ATIVA:** FASE 1 — OIO ID + identidade central
+A infraestrutura principal do OIO já está bastante avançada. Não devemos voltar para fases antigas como se ainda não existissem.
 
-**PRÓXIMA TAREFA:** implementar a persistência do avatar do OIO ID no Cloudinary e vincular `avatar_url` / `avatar_public_id` ao perfil no Turso.
+### Ordem imediata
 
-**Depois:** testar com os 2 usuários antes de iniciar a FASE 2.
+```text
+1. FECHAR AVATAR / IDENTIDADE OIO ID
+             ↓
+2. CONSUMIR OIO ID NO CORE
+             ↓
+3. BLOQUEAR CORE SEM SESSÃO VÁLIDA
+             ↓
+4. FINALIZAR ABLY REALTIME
+             ↓
+5. UNIFICAR IDENTIDADE NO CHAT
+             ↓
+6. AVANÇAR VITORINO
+```
+
+**PRÓXIMA TAREFA:** persistência do avatar do OIO ID no Cloudinary + Turso.
 
 ---
 
