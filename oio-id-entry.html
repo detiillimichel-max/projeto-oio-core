@@ -19,6 +19,7 @@
       if(core){
         core.addEventListener('click',e=>{
           e.preventDefault();
+          e.stopImmediatePropagation();
           window.location.replace('oio-core.html');
         },true);
       }
