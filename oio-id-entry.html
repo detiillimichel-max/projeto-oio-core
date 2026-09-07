@@ -14,6 +14,7 @@
   const frame=document.getElementById('id-frame');
   const CLOUDINARY_UPLOAD_URL='https://api.cloudinary.com/v1_1/hmnhqfco/image/upload';
   const CLOUDINARY_UPLOAD_PRESET='oio_core_fotos_upload';
+  const VITORINO_URL='https://pix-parade-shop.lovable.app/';
 
   function installBridge(){
     try{
@@ -24,6 +25,15 @@
           e.preventDefault();
           e.stopImmediatePropagation();
           window.location.replace('oio-core.html');
+        },true);
+      }
+
+      const vitorino=doc.querySelector('[data-action="vitorino"]');
+      if(vitorino){
+        vitorino.addEventListener('click',e=>{
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          window.location.href=VITORINO_URL;
         },true);
       }
 
