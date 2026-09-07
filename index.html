@@ -9,7 +9,11 @@
 </head>
 <body>
     <script>
-        window.location.replace('oio-id.html');
+        // Entrada normal do aplicativo: OIO ID.
+        // Quando o usuário já está no OIO ID e escolhe "OIO Core",
+        // a entrada pelo índice deve abrir o Core em teste.html.
+        const fromOioId = document.referrer && /\/oio-id\.html(?:[?#]|$)/.test(document.referrer);
+        window.location.replace(fromOioId ? 'teste.html' : 'oio-id.html');
     </script>
     <noscript>
         <a href="oio-id.html">Abrir OIO ID</a>
