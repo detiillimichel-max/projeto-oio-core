@@ -23,19 +23,51 @@ iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#E8E5DF
     const r=await fetch('/api/auth/session',{credentials:'same-origin',cache:'no-store'});
     const data=await r.json().catch(()=>({}));
     if(!r.ok||!data.authenticated){window.location.replace('oio-id-entry.html');return;}
+
     const account=data.account||{};
-    if(account.nome) localStorage.setItem('oio_nome',account.nome);
-    const url=account.avatar_url;
-    if(url){
+    if(account.nome)localStorage.setItem('oio_nome',account.nome);
+
+    const ownAvatar=account.avatar_url;
+    if(ownAvatar){
       const img=document.getElementById('identity-photo');
-      img.src=url;
+      img.src=ownAvatar;
       img.style.display='block';
       document.getElementById('identity-dot').style.display='block';
     }
+
     const frame=document.createElement('iframe');
     frame.src='teste.html';
     frame.title='OIO Core';
     document.body.appendChild(frame);
+
+    frame.addEventListener('load',async()=>{
+      try{
+        const doc=frame.contentDocument;
+        const otherAvatar=doc.getElementById('gabriela');
+        if(!otherAvatar)return;
+
+        const chatResponse=await fetch('/api/chat?limit=100',{credentials:'same-origin',cache:'no-store'});
+        const chatData=await chatResponse.json().catch(()=>({}));
+        const messages=Array.isArray(chatData.messages)?chatData.messages:[];
+        const other=[...messages].reverse().find(m=>m.autor&&String(m.autor)!==String(account.nome));
+
+        if(other){
+          if(other.autor_avatar_url){
+            otherAvatar.textContent='';
+            otherAvatar.style.backgroundImage=`url("${String(other.autor_avatar_url).replace(/"/g,'\\"')}")`;
+            otherAvatar.style.backgroundSize='cover';
+            otherAvatar.style.backgroundPosition='center';
+            otherAvatar.style.backgroundRepeat='no-repeat';
+          }else{
+            otherAvatar.textContent=String(other.autor).trim().charAt(0).toUpperCase()||'G';
+          }
+          otherAvatar.title=String(other.autor);
+        }
+      }catch(error){
+        console.error('OIO Core contact avatar error:',error);
+      }
+    });
+
     document.getElementById('loading').remove();
   }catch(error){
     console.error('OIO Core identity error:',error);
