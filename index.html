@@ -11,6 +11,9 @@
 <body>
     <main class="splash" aria-label="OIO ONE"><img src="icone-512.png" alt="OIO ONE"></main>
     <script>
+        if('serviceWorker' in navigator){
+            window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js',{scope:'/'}).catch(error=>console.error('OIO PWA service worker error:',error)));
+        }
         setTimeout(()=>window.location.replace('oio-id-entry.html'),900);
     </script>
     <noscript><a href="oio-id-entry.html">Abrir OIO ID</a></noscript>
