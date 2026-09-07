@@ -1,5 +1,10 @@
-const CACHE_NAME = 'oio-one-v7';
+const CACHE_NAME = 'oio-one-v8';
 const STATIC_ASSETS = [
+  '/',
+  'index.html',
+  'oio-id-entry.html',
+  'oio-id.html',
+  'oio-core.html',
   'teste.html',
   'manifest.json',
   'icone-512.png'
@@ -34,7 +39,7 @@ self.addEventListener('fetch', event => {
           caches.open(CACHE_NAME).then(cache => cache.put(request, copy));
           return response;
         })
-        .catch(() => caches.match(request).then(cached => cached || caches.match('teste.html')))
+        .catch(() => caches.match(request).then(cached => cached || caches.match('/')))
     );
     return;
   }
@@ -48,7 +53,7 @@ self.addEventListener('push', event => {
   const title = data.title || 'OIO';
   const body = data.body || 'Você recebeu uma nova mensagem.';
   const messageId = data.messageId || '';
-  const url = data.url || 'teste.html';
+  const url = data.url || '/';
 
   event.waitUntil(self.registration.showNotification(title, {
     body,
@@ -66,7 +71,7 @@ self.addEventListener('push', event => {
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  const target = new URL(event.notification.data?.url || 'teste.html', self.location.origin);
+  const target = new URL(event.notification.data?.url || '/', self.location.origin);
   if (event.action === 'reply') target.searchParams.set('responder', '1');
   if (event.action === 'read') target.searchParams.set('marcar', '1');
 
