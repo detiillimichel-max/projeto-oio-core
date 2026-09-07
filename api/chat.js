@@ -112,11 +112,11 @@ export default async function handler(req, res) {
       const since = Math.max(Number(req.query?.since) || 0, 0);
       const result = since
         ? await db.execute({
-            sql: `SELECT id, autor, texto, data, media_url, media_public_id, media_type, media_duration FROM chat_geral WHERE id > ? ORDER BY id ASC LIMIT ?`,
+            sql: `SELECT c.id, c.autor, c.texto, c.data, c.media_url, c.media_public_id, c.media_type, c.media_duration, p.avatar_url AS autor_avatar_url FROM chat_geral c LEFT JOIN profiles p ON p.display_name = c.autor WHERE c.id > ? ORDER BY c.id ASC LIMIT ?`,
             args: [since, limit]
           })
         : await db.execute({
-            sql: `SELECT id, autor, texto, data, media_url, media_public_id, media_type, media_duration FROM chat_geral ORDER BY id DESC LIMIT ?`,
+            sql: `SELECT c.id, c.autor, c.texto, c.data, c.media_url, c.media_public_id, c.media_type, c.media_duration, p.avatar_url AS autor_avatar_url FROM chat_geral c LEFT JOIN profiles p ON p.display_name = c.autor ORDER BY c.id DESC LIMIT ?`,
             args: [limit]
           });
 
@@ -128,7 +128,8 @@ export default async function handler(req, res) {
         media_url: row.media_url ? String(row.media_url) : null,
         media_public_id: row.media_public_id ? String(row.media_public_id) : null,
         media_type: row.media_type ? String(row.media_type) : null,
-        media_duration: row.media_duration == null ? null : Number(row.media_duration)
+        media_duration: row.media_duration == null ? null : Number(row.media_duration),
+        autor_avatar_url: row.autor_avatar_url ? String(row.autor_avatar_url) : null
       }));
 
       if (!since) rows.reverse();
