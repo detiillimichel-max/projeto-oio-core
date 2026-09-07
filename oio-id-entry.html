@@ -12,7 +12,10 @@
 <script>
 (()=>{
   const frame=document.getElementById('id-frame');
-  frame.addEventListener('load',()=>{
+  const CLOUDINARY_UPLOAD_URL='https://api.cloudinary.com/v1_1/hmnhqfco/image/upload';
+  const CLOUDINARY_UPLOAD_PRESET='oio_core_fotos_upload';
+
+  function installBridge(){
     try{
       const doc=frame.contentDocument;
       const core=doc.querySelector('[data-action="core"]');
@@ -23,8 +26,65 @@
           window.location.replace('oio-core.html');
         },true);
       }
+
+      const avatarButton=doc.getElementById('avatarButton');
+      const cameraInput=doc.getElementById('cameraInput');
+      const galleryInput=doc.getElementById('galleryInput');
+      const status=doc.getElementById('avatarStatus');
+      if(!cameraInput||!galleryInput)return;
+
+      async function saveAvatar(file){
+        if(!file)return;
+        if(!String(file.type||'').startsWith('image/')){
+          if(status)status.textContent='Escolha uma imagem válida.';
+          return;
+        }
+        if(file.size>8*1024*1024){
+          if(status)status.textContent='A foto deve ter no máximo 8 MB.';
+          return;
+        }
+
+        if(status)status.textContent='Salvando foto no OIO ID...';
+        if(avatarButton)avatarButton.disabled=true;
+        try{
+          const formData=new FormData();
+          formData.append('file',file);
+          formData.append('upload_preset',CLOUDINARY_UPLOAD_PRESET);
+          formData.append('folder','oio-core/fotos');
+
+          const uploadResponse=await fetch(CLOUDINARY_UPLOAD_URL,{method:'POST',body:formData});
+          const uploadData=await uploadResponse.json().catch(()=>({}));
+          if(!uploadResponse.ok||!uploadData.secure_url||!uploadData.public_id){
+            throw new Error('Falha no upload da foto.');
+          }
+
+          const profileResponse=await fetch('/api/auth/profile',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            credentials:'same-origin',
+            body:JSON.stringify({avatar_url:uploadData.secure_url,avatar_public_id:uploadData.public_id})
+          });
+          const profileData=await profileResponse.json().catch(()=>({}));
+          if(!profileResponse.ok)throw new Error(profileData.error||'Falha ao salvar o perfil.');
+
+          const preview=doc.getElementById('avatarPreview');
+          if(preview){preview.src=profileData.profile?.avatar_url||uploadData.secure_url;}
+          avatarButton?.classList.add('has-photo');
+          if(status)status.textContent='Foto salva no OIO ID.';
+        }catch(error){
+          console.error('OIO ID avatar bridge error:',error);
+          if(status)status.textContent=error.message||'Não foi possível salvar a foto.';
+        }finally{
+          if(avatarButton)avatarButton.disabled=false;
+        }
+      }
+
+      cameraInput.addEventListener('change',()=>saveAvatar(cameraInput.files?.[0]));
+      galleryInput.addEventListener('change',()=>saveAvatar(galleryInput.files?.[0]));
     }catch(error){console.error('OIO ID entry bridge error:',error)}
-  });
+  }
+
+  frame.addEventListener('load',()=>setTimeout(installBridge,0));
 })();
 </script>
 </body>
