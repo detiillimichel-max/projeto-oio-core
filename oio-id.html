@@ -27,6 +27,7 @@
     .avatar-area { display:flex; justify-content:center; margin:4px 0 12px; } .avatar-button { width:154px; height:154px; border:1px solid rgba(74,73,64,.35); border-radius:50%; background:var(--oio-core); display:grid; place-items:center; cursor:pointer; overflow:hidden; position:relative; padding:0; } .avatar-button::after { content:'Foto'; position:absolute; bottom:12px; font-size:17px; color:#FFF; } .avatar-icon { width:62px; height:62px; fill:#FFF; } .avatar-preview { width:100%; height:100%; object-fit:cover; display:none; } .avatar-button.has-photo .avatar-preview { display:block; } .avatar-button.has-photo .avatar-icon { display:none; } .avatar-button.has-photo::after { background:rgba(0,0,0,.40); left:0; right:0; bottom:0; padding:7px; }
     .camera-note { margin:0 0 28px; text-align:center; color:#77766F; font-size:12px; } .profile-name { text-align:center; font-size:28px; margin:0 0 7px; color:#202020; } .profile-id { text-align:center; color:#77766F; font-size:13px; margin-bottom:28px; } .profile-menu { border-top:1px solid rgba(74,73,64,.22); } .profile-menu button { width:100%; min-height:58px; text-align:left; border:0; border-bottom:1px solid rgba(74,73,64,.16); background:rgba(255,255,255,.22); font-size:19px; cursor:pointer; padding:0 10px; } .profile-menu button:hover { background:rgba(255,255,255,.38); } .profile-menu .exit { margin-top:18px; color:#3D3C37; }
     .avatar-choice-backdrop { display:none; position:fixed; inset:0; background:rgba(25,25,22,.52); z-index:100; align-items:flex-end; justify-content:center; padding:18px; } .avatar-choice-backdrop.open { display:flex; } .avatar-choice { width:min(100%,480px); background:#F4F2EA; border:1px solid rgba(74,73,64,.22); border-radius:20px; padding:18px; box-shadow:0 20px 60px rgba(50,48,40,.25); } .avatar-choice h2 { margin:0 0 6px; font-size:20px; font-weight:500; color:#222; } .avatar-choice p { margin:0 0 16px; color:#6B6A63; font-size:13px; } .choice-btn { width:100%; min-height:54px; margin-top:10px; border:1px solid rgba(74,73,64,.22); border-radius:12px; background:rgba(255,255,255,.55); display:flex; align-items:center; gap:12px; padding:0 16px; cursor:pointer; text-align:left; } .choice-btn svg { width:24px; height:24px; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; } .choice-btn.close { justify-content:center; border-color:transparent; background:transparent; color:#6B6A63; }
+    .avatar-status { min-height:20px; margin:-14px 0 18px; text-align:center; color:#5F5E58; font-size:13px; }
     @media (max-width:420px) { .topbar{height:68px;padding:0 15px;gap:12px}.brand{font-size:21px}main{padding:26px 14px 42px}.card{padding:19px}.intro h1{font-size:30px} }
   </style>
 </head>
@@ -48,7 +49,7 @@
         </div>
       </section>
       <section class="screen" id="profileScreen">
-        <div class="intro"><span class="badge">OIO ID · PERFIL</span><h1>Meu perfil</h1><p>Identidade central do usuário OIO.</p></div><div class="card"><div class="avatar-area"><button class="avatar-button" id="avatarButton" type="button" aria-label="Adicionar ou alterar foto do perfil"><svg class="avatar-icon" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="21" r="12"></circle><path d="M10 55c2-12 10-18 22-18s20 6 22 18H10z"></path></svg><img class="avatar-preview" id="avatarPreview" alt="Prévia da foto do perfil"></button></div><div class="camera-note">Toque na foto para escolher câmera ou galeria.</div><h2 class="profile-name" id="profileName">Michel</h2><div class="profile-id">OIO ID · identidade central</div><nav class="profile-menu" aria-label="Menu do perfil"><button type="button" data-action="core">OIO Core</button><button type="button" data-action="vitorino">Vitorino</button><button type="button" data-action="config">Configurações</button><button class="exit" type="button" id="logoutDemo">SAIR</button></nav></div>
+        <div class="intro"><span class="badge">OIO ID · PERFIL</span><h1>Meu perfil</h1><p>Identidade central do usuário OIO.</p></div><div class="card"><div class="avatar-area"><button class="avatar-button" id="avatarButton" type="button" aria-label="Adicionar ou alterar foto do perfil"><svg class="avatar-icon" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="21" r="12"></circle><path d="M10 55c2-12 10-18 22-18s20 6 22 18H10z"></path></svg><img class="avatar-preview" id="avatarPreview" alt="Prévia da foto do perfil"></button></div><div class="camera-note">Toque na foto para escolher câmera ou galeria.</div><div class="avatar-status" id="avatarStatus" aria-live="polite"></div><h2 class="profile-name" id="profileName">Michel</h2><div class="profile-id">OIO ID · identidade central</div><nav class="profile-menu" aria-label="Menu do perfil"><button type="button" data-action="core">OIO Core</button><button type="button" data-action="vitorino">Vitorino</button><button type="button" data-action="config">Configurações</button><button class="exit" type="button" id="logoutDemo">SAIR</button></nav></div>
       </section>
     </main>
   </div>
@@ -69,12 +70,26 @@
         const response=await fetch('/api/auth/session',{method:'GET',credentials:'same-origin',cache:'no-store'});
         const data=await response.json().catch(()=>({}));
         if(response.ok && data.authenticated){
-          document.getElementById('profileName').textContent=data.account?.nome||'Usuário OIO';
-          const avatarUrl=data.account?.avatar_url;
-          if(avatarUrl){document.getElementById('avatarPreview').src=avatarUrl;document.getElementById('avatarButton').classList.add('has-photo');}
+          applySessionProfile(data.account);
           showScreen('profileScreen');
         }
       }catch(error){ console.error('OIO ID session check error:',error); }
+    }
+    function applySessionProfile(account){
+      document.getElementById('profileName').textContent=account?.nome||'Usuário OIO';
+      const avatarUrl=account?.avatar_url;
+      if(avatarUrl){setAvatarPreview(avatarUrl);}
+      else{clearAvatarPreview();}
+    }
+    function setAvatarPreview(url){
+      const preview=document.getElementById('avatarPreview');
+      const button=document.getElementById('avatarButton');
+      preview.src=url; button.classList.add('has-photo');
+    }
+    function clearAvatarPreview(){
+      const preview=document.getElementById('avatarPreview');
+      const button=document.getElementById('avatarButton');
+      preview.removeAttribute('src'); button.classList.remove('has-photo');
     }
     checkSession();
 
@@ -87,7 +102,7 @@
         const response=await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({email,senha})});
         const data=await response.json().catch(()=>({}));
         if(!response.ok){message(loginMessage,data.error||'Não foi possível realizar o login.','error');return;}
-        document.getElementById('profileName').textContent=data.account?.nome||'Usuário OIO'; showScreen('profileScreen');
+        applySessionProfile(data.account); showScreen('profileScreen');
       }catch(error){console.error('OIO ID login request error:',error);message(loginMessage,'Não foi possível conectar ao login. Verifique sua conexão e tente novamente.','error');}
       finally{submit.disabled=false;submit.textContent='ENTRAR';}
     });
@@ -107,10 +122,43 @@
     document.querySelector('[data-action="config"]').addEventListener('click',()=>message(document.getElementById('loginMessage'),'Configurações ficará para a última etapa, como planejado.','success'));
     document.getElementById('logoutDemo').addEventListener('click',()=>{showScreen('loginScreen');message(document.getElementById('loginMessage'),'SAIR ainda é visual nesta fase. Sessão real será integrada posteriormente.','success');});
 
-    const avatarButton=document.getElementById('avatarButton'),avatarChoice=document.getElementById('avatarChoice'),cameraInput=document.getElementById('cameraInput'),galleryInput=document.getElementById('galleryInput'),avatarPreview=document.getElementById('avatarPreview');
-    function openAvatarChoice(){avatarChoice.classList.add('open');avatarChoice.setAttribute('aria-hidden','false');} function closeAvatarChoice(){avatarChoice.classList.remove('open');avatarChoice.setAttribute('aria-hidden','true');}
+    const avatarButton=document.getElementById('avatarButton'),avatarChoice=document.getElementById('avatarChoice'),cameraInput=document.getElementById('cameraInput'),galleryInput=document.getElementById('galleryInput'),avatarPreview=document.getElementById('avatarPreview'),avatarStatus=document.getElementById('avatarStatus');
+    const CLOUDINARY_UPLOAD_URL='https://api.cloudinary.com/v1_1/hmnhqfco/image/upload';
+    const CLOUDINARY_UPLOAD_PRESET='oio_core_fotos_upload';
+    let avatarBusy=false;
+    function openAvatarChoice(){if(avatarBusy)return;avatarChoice.classList.add('open');avatarChoice.setAttribute('aria-hidden','false');} function closeAvatarChoice(){avatarChoice.classList.remove('open');avatarChoice.setAttribute('aria-hidden','true');}
     avatarButton.addEventListener('click',openAvatarChoice); document.getElementById('closeAvatarChoice').addEventListener('click',closeAvatarChoice); avatarChoice.addEventListener('click',e=>{if(e.target===avatarChoice)closeAvatarChoice();}); document.getElementById('cameraChoice').addEventListener('click',()=>{closeAvatarChoice();cameraInput.click();}); document.getElementById('galleryChoice').addEventListener('click',()=>{closeAvatarChoice();galleryInput.click();});
-    function previewAvatar(file){if(!file)return;const reader=new FileReader();reader.onload=()=>{avatarPreview.src=reader.result;avatarButton.classList.add('has-photo');};reader.readAsDataURL(file);} cameraInput.addEventListener('change',()=>previewAvatar(cameraInput.files[0])); galleryInput.addEventListener('change',()=>previewAvatar(galleryInput.files[0]));
+
+    async function uploadAvatarToCloudinary(file){
+      if(!file)return;
+      if(!file.type.startsWith('image/')){setAvatarStatus('Selecione uma imagem válida.','error');return;}
+      if(file.size>10*1024*1024){setAvatarStatus('A foto deve ter no máximo 10 MB.','error');return;}
+      if(avatarBusy)return;
+      avatarBusy=true; avatarButton.disabled=true; cameraInput.disabled=true; galleryInput.disabled=true; setAvatarStatus('Enviando foto...','busy');
+      try{
+        const formData=new FormData();
+        formData.append('file',file);
+        formData.append('upload_preset',CLOUDINARY_UPLOAD_PRESET);
+        formData.append('folder','oio-core/fotos');
+        const cloudResponse=await fetch(CLOUDINARY_UPLOAD_URL,{method:'POST',body:formData});
+        const cloudData=await cloudResponse.json().catch(()=>({}));
+        if(!cloudResponse.ok||!cloudData.secure_url||!cloudData.public_id){throw new Error(cloudData.error?.message||'Não foi possível enviar a foto ao Cloudinary.');}
+        setAvatarStatus('Salvando identidade...','busy');
+        const profileResponse=await fetch('/api/auth/profile',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'same-origin',body:JSON.stringify({avatar_url:cloudData.secure_url,avatar_public_id:cloudData.public_id})});
+        const profileData=await profileResponse.json().catch(()=>({}));
+        if(!profileResponse.ok){throw new Error(profileData.error||'Não foi possível salvar a foto no OIO ID.');}
+        const savedUrl=profileData.profile?.avatar_url||cloudData.secure_url;
+        setAvatarPreview(savedUrl);
+        setAvatarStatus('Foto salva no OIO ID.','success');
+      }catch(error){
+        console.error('OIO ID avatar upload error:',error);
+        setAvatarStatus(error.message||'Não foi possível salvar a foto.','error');
+      }finally{
+        avatarBusy=false; avatarButton.disabled=false; cameraInput.disabled=false; galleryInput.disabled=false; cameraInput.value=''; galleryInput.value='';
+      }
+    }
+    function setAvatarStatus(text,type){avatarStatus.textContent=text;avatarStatus.style.color=type==='error'?'#7D2525':type==='success'?'#315D3A':'#5F5E58';}
+    cameraInput.addEventListener('change',()=>uploadAvatarToCloudinary(cameraInput.files[0])); galleryInput.addEventListener('change',()=>uploadAvatarToCloudinary(galleryInput.files[0]));
   </script>
 </body>
 </html>
