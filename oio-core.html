@@ -43,6 +43,26 @@ iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#E8E5DF
     frame.addEventListener('load',async()=>{
       try{
         const doc=frame.contentDocument;
+
+        // LOJA: quinta aba, imediatamente antes de LIGAR.
+        // Mantém o desenho do Chat existente e usa um ícone Lucide standalone.
+        const menu=doc.querySelector('.menu-modulos');
+        const callButton=doc.getElementById('call-btn');
+        if(menu&&callButton&&!doc.getElementById('loja-btn')){
+          const lojaButton=doc.createElement('button');
+          lojaButton.type='button';
+          lojaButton.id='loja-btn';
+          lojaButton.className='btn-modulo';
+          lojaButton.setAttribute('aria-label','Loja');
+          lojaButton.title='Loja';
+          lojaButton.innerHTML='<i data-lucide="shopping-bag"></i><span>LOJA</span>';
+          menu.insertBefore(lojaButton,callButton);
+          lojaButton.addEventListener('click',()=>{
+            doc.defaultView.location.href='https://pix-parade-shop.lovable.app/';
+          });
+          if(doc.defaultView.lucide)doc.defaultView.lucide.createIcons();
+        }
+
         const otherAvatar=doc.getElementById('gabriela');
         if(!otherAvatar)return;
 
@@ -64,7 +84,7 @@ iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#E8E5DF
           otherAvatar.title=String(other.autor);
         }
       }catch(error){
-        console.error('OIO Core contact avatar error:',error);
+        console.error('OIO Core contact/navigation bridge error:',error);
       }
     });
 
