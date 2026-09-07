@@ -45,7 +45,7 @@ iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#E8E5DF
         const doc=frame.contentDocument;
 
         // LOJA: quinta aba, imediatamente antes de LIGAR.
-        // Mantém o desenho do Chat existente e usa um ícone Lucide standalone.
+        // O ícone é SVG Lucide inline para não depender do carregamento da biblioteca dentro do iframe.
         const menu=doc.querySelector('.menu-modulos');
         const callButton=doc.getElementById('call-btn');
         if(menu&&callButton&&!doc.getElementById('loja-btn')){
@@ -55,12 +55,11 @@ iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#E8E5DF
           lojaButton.className='btn-modulo';
           lojaButton.setAttribute('aria-label','Loja');
           lojaButton.title='Loja';
-          lojaButton.innerHTML='<i data-lucide="shopping-bag"></i><span>LOJA</span>';
+          lojaButton.innerHTML='<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path><path d="M3 6h18"></path><path d="M16 10a4 4 0 0 1-8 0"></path></svg><span>LOJA</span>';
           menu.insertBefore(lojaButton,callButton);
           lojaButton.addEventListener('click',()=>{
             doc.defaultView.location.href='https://pix-parade-shop.lovable.app/';
           });
-          if(doc.defaultView.lucide)doc.defaultView.lucide.createIcons();
         }
 
         const otherAvatar=doc.getElementById('gabriela');
