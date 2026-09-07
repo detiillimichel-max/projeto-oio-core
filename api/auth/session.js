@@ -31,8 +31,9 @@ function getSessionToken(req) {
   return null;
 }
 
-function hashSessionToken(token) {
-  return createHash('sha256').update(token).digest('hex');
+function hasForceLoginCookie(req) {
+  const cookieHeader = String(req.headers.cookie || '');
+  return cookieHeader.split(';').some(item => item.trim().startsWith('oio_force_login='));
 }
 
 function clearSessionCookie(res) {
@@ -40,6 +41,17 @@ function clearSessionCookie(res) {
     'Set-Cookie',
     'oio_session=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax'
   );
+}
+
+function clearForceLoginCookie(res) {
+  res.setHeader(
+    'Set-Cookie',
+    'oio_force_login=; Max-Age=0; Path=/; Secure; SameSite=Lax'
+  );
+}
+
+function hashSessionToken(token) {
+  return createHash('sha256').update(token).digest('hex');
 }
 
 export default async function handler(req, res) {
@@ -50,6 +62,11 @@ export default async function handler(req, res) {
   }
 
   try {
+    if (hasForceLoginCookie(req)) {
+      clearForceLoginCookie(res);
+      return res.status(401).json({ authenticated: false, reason: 'login_required' });
+    }
+
     const sessionToken = getSessionToken(req);
 
     if (!sessionToken) {
