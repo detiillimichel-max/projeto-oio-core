@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#F3F1E9">
+<title>OIO ONE — OIO ID</title>
+<style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#F3F1E9}iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#F3F1E9}</style>
+</head>
+<body>
+<iframe id="id-frame" src="oio-id.html" title="OIO ID"></iframe>
+<script>
+(()=>{
+  const frame=document.getElementById('id-frame');
+  frame.addEventListener('load',()=>{
+    try{
+      const doc=frame.contentDocument;
+      const core=doc.querySelector('[data-action="core"]');
+      if(core){
+        core.addEventListener('click',e=>{
+          e.preventDefault();
+          window.location.replace('oio-core.html');
+        },true);
+      }
+    }catch(error){console.error('OIO ID entry bridge error:',error)}
+  });
+})();
+</script>
+</body>
+</html>
