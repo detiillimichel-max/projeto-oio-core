@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#E8E5DF">
+<title>OIO ONE — Core</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#E8E5DF}
+iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#E8E5DF}
+#identity-photo{position:fixed;z-index:100;top:27px;left:32px;width:56px;height:56px;border-radius:50%;object-fit:cover;border:2px solid #968F83;background:#A5A58D;display:none;pointer-events:none}
+#identity-dot{position:fixed;z-index:101;top:73px;left:78px;width:12px;height:12px;border-radius:50%;background:#3c8a42;border:2px solid #E8E5DF;display:none;pointer-events:none}
+</style>
+</head>
+<body>
+<iframe src="teste.html" title="OIO Core"></iframe>
+<img id="identity-photo" alt="Foto do usuário OIO">
+<span id="identity-dot" aria-hidden="true"></span>
+<script>
+(async()=>{
+  try{
+    const r=await fetch('/api/auth/session',{credentials:'same-origin',cache:'no-store'});
+    const data=await r.json().catch(()=>({}));
+    if(!r.ok||!data.authenticated) return;
+    const url=data.account?.avatar_url;
+    if(url){
+      const img=document.getElementById('identity-photo');
+      img.src=url;
+      img.style.display='block';
+      document.getElementById('identity-dot').style.display='block';
+    }
+  }catch(error){console.error('OIO Core identity error:',error)}
+})();
+</script>
+</body>
+</html>
