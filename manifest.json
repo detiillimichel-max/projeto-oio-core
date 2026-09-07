@@ -1,8 +1,8 @@
 {
   "name": "OIO ONE MSM",
   "short_name": "OIO",
-  "start_url": "teste.html",
-  "scope": "./",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#E8E5DF",
   "theme_color": "#C4C4C4",
