@@ -1,5 +1,5 @@
 import { createClient } from '@libsql/client';
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 
 let client;
 
@@ -138,7 +138,7 @@ export default async function handler(req, res) {
     });
 
     const timestamp = Date.now();
-    const nonce = `${timestamp}-${crypto.randomUUID()}`;
+    const nonce = `${timestamp}-${randomUUID()}`;
 
     const response = await fetch(
       `https://main.realtime.ably.net/keys/${encodeURIComponent(keyName)}/requestToken`,
