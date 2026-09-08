@@ -1,6 +1,6 @@
 /**
  * OIO Core — Indicador de digitação
- * Versão: 1.2.0
+ * Versão: 1.2.1
  * Status: módulo pronto para receber eventos reais via Ably.
  *
  * Transporte:
@@ -10,7 +10,7 @@
  * - Estado de typing não é gravado no Turso.
  */
 
-const OIO_DIGITANDO_VERSION = '1.2.0';
+const OIO_DIGITANDO_VERSION = '1.2.1';
 const OIO_DIGITANDO_ICON = '/assets/img/digitando-pombo.gif';
 const OIO_DIGITANDO_CHANNEL_PREFIX = 'oio:typing:';
 const OIO_ABLY_SDK_URL = 'https://cdn.ably.com/lib/ably.min-2.js';
@@ -154,17 +154,22 @@ async function conectarDigitandoAbly({
     await publicar('typing:stop');
   }
 
-  await meuCanal.subscribe(['typing:start', 'typing:stop'], message => {
+  const receberInicio = message => {
     const data = message?.data || {};
     if (String(data.senderOioId || message.clientId) !== String(destinatarioOioId)) return;
     if (String(data.recipientOioId) !== String(meuOioId)) return;
+    indicador.mostrar();
+  };
 
-    if (message.name === 'typing:start') {
-      indicador.mostrar();
-    } else if (message.name === 'typing:stop') {
-      indicador.ocultar();
-    }
-  });
+  const receberFim = message => {
+    const data = message?.data || {};
+    if (String(data.senderOioId || message.clientId) !== String(destinatarioOioId)) return;
+    if (String(data.recipientOioId) !== String(meuOioId)) return;
+    indicador.ocultar();
+  };
+
+  await meuCanal.subscribe('typing:start', receberInicio);
+  await meuCanal.subscribe('typing:stop', receberFim);
 
   const onInput = () => {
     if (timerParada) clearTimeout(timerParada);
