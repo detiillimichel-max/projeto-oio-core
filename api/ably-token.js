@@ -78,6 +78,16 @@ function sanitizeId(value) {
   return String(value || '').trim().slice(0, 128);
 }
 
+function createCapability(ownChannel, recipientChannel) {
+  const capability = {};
+
+  for (const channel of [ownChannel, recipientChannel].sort()) {
+    capability[channel] = channel === ownChannel ? ['subscribe'] : ['publish'];
+  }
+
+  return JSON.stringify(capability);
+}
+
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store');
 
@@ -132,10 +142,7 @@ export default async function handler(req, res) {
     // e pode ASSINAR somente no próprio canal de entrada.
     const ownChannel = `${CHANNEL_PREFIX}${myOioId}`;
     const recipientChannel = `${CHANNEL_PREFIX}${recipientOioId}`;
-    const capability = JSON.stringify({
-      [ownChannel]: ['subscribe'],
-      [recipientChannel]: ['publish']
-    });
+    const capability = createCapability(ownChannel, recipientChannel);
 
     const timestamp = Date.now();
     const nonce = `${timestamp}-${randomUUID()}`;
