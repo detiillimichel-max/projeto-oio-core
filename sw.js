@@ -1,4 +1,4 @@
-const CACHE_NAME = 'oio-one-v9';
+const CACHE_NAME = 'oio-one-v10';
 const STATIC_ASSETS = [
   '/',
   'index.html',
@@ -7,6 +7,7 @@ const STATIC_ASSETS = [
   'oio-core.html',
   'teste.html',
   'manifest.json',
+  'icone-192.png',
   'icone-512.png'
 ];
 
