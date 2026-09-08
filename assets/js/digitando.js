@@ -1,22 +1,19 @@
 /**
  * OIO Core — Indicador de digitação
- * Versão: 1.1.1
- * Status: módulo preparado, ainda não conectado ao CHAT.
+ * Versão: 1.2.0
+ * Status: módulo pronto para receber eventos reais via Ably.
  *
- * Objetivo:
- * - concentrar a lógica do indicador em um único arquivo;
- * - usar um elemento animado pequeno no lugar dos três pontinhos;
- * - não gravar estado no Turso;
- * - não criar dados falsos;
- * - permitir que o CHAT receba posteriormente um evento real de digitação.
- *
- * Importante:
- * Esta versão NÃO finge que outro usuário está digitando.
- * O indicador só deve ser exibido após um evento real do outro usuário.
+ * Transporte:
+ * - Ably carrega somente eventos pequenos de typing.
+ * - O pombo é um GIF local do aplicativo.
+ * - Nenhuma imagem, avatar ou Base64 é enviado ao Ably.
+ * - Estado de typing não é gravado no Turso.
  */
 
-const OIO_DIGITANDO_VERSION = '1.1.1';
+const OIO_DIGITANDO_VERSION = '1.2.0';
 const OIO_DIGITANDO_ICON = '/assets/img/digitando-pombo.gif';
+const OIO_DIGITANDO_CHANNEL_PREFIX = 'oio:typing:';
+const OIO_ABLY_SDK_URL = 'https://cdn.ably.com/lib/ably.min-2.js';
 
 function criarIndicadorDigitando({ container, nome = 'Usuário' } = {}) {
   if (!container) {
@@ -70,16 +67,154 @@ function criarIndicadorDigitando({ container, nome = 'Usuário' } = {}) {
   });
 }
 
-/**
- * Contrato futuro de eventos reais.
- *
- * O módulo não escolhe banco, WebSocket ou outro transporte.
- * A camada de comunicação do CHAT poderá chamar:
- *
- *   indicador.mostrar()
- *   indicador.ocultar()
- *
- * somente após receber um evento real do outro usuário.
- */
+function carregarAblySdk() {
+  if (window.Ably?.Realtime) return Promise.resolve(window.Ably);
 
-export { OIO_DIGITANDO_VERSION, OIO_DIGITANDO_ICON, criarIndicadorDigitando };
+  return new Promise((resolve, reject) => {
+    const existente = document.querySelector('script[data-oio-ably-sdk="true"]');
+    if (existente) {
+      existente.addEventListener('load', () => resolve(window.Ably), { once: true });
+      existente.addEventListener('error', () => reject(new Error('Falha ao carregar o SDK Ably.')), { once: true });
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = OIO_ABLY_SDK_URL;
+    script.async = true;
+    script.dataset.oioAblySdk = 'true';
+    script.onload = () => window.Ably?.Realtime
+      ? resolve(window.Ably)
+      : reject(new Error('SDK Ably carregado sem Realtime.'));
+    script.onerror = () => reject(new Error('Falha ao carregar o SDK Ably.'));
+    document.head.appendChild(script);
+  });
+}
+
+/**
+ * Conecta o indicador ao canal de typing do destinatário.
+ *
+ * O servidor vincula o token ao OIO ID autenticado e entrega:
+ * - subscribe somente no canal próprio;
+ * - publish somente no canal do destinatário.
+ *
+ * O evento enviado contém apenas IDs e estado de digitação.
+ * Nome, avatar, foto, GIF e Base64 permanecem locais.
+ */
+async function conectarDigitandoAbly({
+  container,
+  nome = 'Usuário',
+  input,
+  meuOioId,
+  destinatarioOioId
+} = {}) {
+  if (!container) throw new Error('OIO Digitando: container é obrigatório.');
+  if (!input) throw new Error('OIO Digitando: input é obrigatório.');
+  if (!meuOioId) throw new Error('OIO Digitando: meuOioId é obrigatório.');
+  if (!destinatarioOioId) throw new Error('OIO Digitando: destinatarioOioId é obrigatório.');
+  if (String(meuOioId) === String(destinatarioOioId)) {
+    throw new Error('OIO Digitando: remetente e destinatário precisam ser diferentes.');
+  }
+
+  const Ably = await carregarAblySdk();
+  const indicador = criarIndicadorDigitando({ container, nome });
+  const authUrl = `/api/ably-token?recipient=${encodeURIComponent(String(destinatarioOioId))}`;
+
+  const realtime = new Ably.Realtime({
+    authUrl,
+    authMethod: 'GET'
+  });
+
+  const meuCanal = realtime.channels.get(`${OIO_DIGITANDO_CHANNEL_PREFIX}${meuOioId}`);
+  const canalDestino = realtime.channels.get(`${OIO_DIGITANDO_CHANNEL_PREFIX}${destinatarioOioId}`);
+
+  let timerParada = null;
+  let digitando = false;
+
+  async function publicar(nomeEvento) {
+    try {
+      await canalDestino.publish(nomeEvento, {
+        senderOioId: String(meuOioId),
+        recipientOioId: String(destinatarioOioId),
+        state: nomeEvento === 'typing:start' ? 'typing' : 'stopped'
+      });
+    } catch (error) {
+      console.error('OIO Ably typing publish error:', error);
+    }
+  }
+
+  async function iniciarDigitacao() {
+    if (digitando) return;
+    digitando = true;
+    await publicar('typing:start');
+  }
+
+  async function pararDigitacao() {
+    if (!digitando) return;
+    digitando = false;
+    await publicar('typing:stop');
+  }
+
+  await meuCanal.subscribe(['typing:start', 'typing:stop'], message => {
+    const data = message?.data || {};
+    if (String(data.senderOioId || message.clientId) !== String(destinatarioOioId)) return;
+    if (String(data.recipientOioId) !== String(meuOioId)) return;
+
+    if (message.name === 'typing:start') {
+      indicador.mostrar();
+    } else if (message.name === 'typing:stop') {
+      indicador.ocultar();
+    }
+  });
+
+  const onInput = () => {
+    if (timerParada) clearTimeout(timerParada);
+
+    if (!input.value.trim()) {
+      pararDigitacao();
+      return;
+    }
+
+    iniciarDigitacao();
+    timerParada = setTimeout(() => {
+      pararDigitacao();
+      timerParada = null;
+    }, 1200);
+  };
+
+  const onBlur = () => {
+    if (timerParada) {
+      clearTimeout(timerParada);
+      timerParada = null;
+    }
+    pararDigitacao();
+  };
+
+  input.addEventListener('input', onInput);
+  input.addEventListener('blur', onBlur);
+
+  realtime.connection.on('failed', change => {
+    console.error('OIO Ably typing connection failed:', change?.reason || change);
+  });
+
+  return Object.freeze({
+    realtime,
+    indicador,
+    canalEntrada: meuCanal,
+    canalSaida: canalDestino,
+    desconectar() {
+      if (timerParada) clearTimeout(timerParada);
+      input.removeEventListener('input', onInput);
+      input.removeEventListener('blur', onBlur);
+      indicador.destruir();
+      realtime.close();
+    }
+  });
+}
+
+export {
+  OIO_DIGITANDO_VERSION,
+  OIO_DIGITANDO_ICON,
+  OIO_DIGITANDO_CHANNEL_PREFIX,
+  criarIndicadorDigitando,
+  conectarDigitandoAbly
+};
