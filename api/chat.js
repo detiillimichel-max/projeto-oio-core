@@ -110,13 +110,30 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       const limit = Math.min(Math.max(Number(req.query?.limit) || 30, 1), 100);
       const since = Math.max(Number(req.query?.since) || 0, 0);
+      const select = `
+        SELECT
+          c.id,
+          c.autor,
+          c.texto,
+          c.data,
+          c.media_url,
+          c.media_public_id,
+          c.media_type,
+          c.media_duration,
+          p.avatar_url AS autor_avatar_url,
+          a.id AS autor_oio_id
+        FROM chat_geral c
+        LEFT JOIN profiles p ON p.display_name = c.autor
+        LEFT JOIN accounts a ON a.id = p.account_id
+      `;
+
       const result = since
         ? await db.execute({
-            sql: `SELECT c.id, c.autor, c.texto, c.data, c.media_url, c.media_public_id, c.media_type, c.media_duration, p.avatar_url AS autor_avatar_url FROM chat_geral c LEFT JOIN profiles p ON p.display_name = c.autor WHERE c.id > ? ORDER BY c.id ASC LIMIT ?`,
+            sql: `${select} WHERE c.id > ? ORDER BY c.id ASC LIMIT ?`,
             args: [since, limit]
           })
         : await db.execute({
-            sql: `SELECT c.id, c.autor, c.texto, c.data, c.media_url, c.media_public_id, c.media_type, c.media_duration, p.avatar_url AS autor_avatar_url FROM chat_geral c LEFT JOIN profiles p ON p.display_name = c.autor ORDER BY c.id DESC LIMIT ?`,
+            sql: `${select} ORDER BY c.id DESC LIMIT ?`,
             args: [limit]
           });
 
@@ -129,7 +146,8 @@ export default async function handler(req, res) {
         media_public_id: row.media_public_id ? String(row.media_public_id) : null,
         media_type: row.media_type ? String(row.media_type) : null,
         media_duration: row.media_duration == null ? null : Number(row.media_duration),
-        autor_avatar_url: row.autor_avatar_url ? String(row.autor_avatar_url) : null
+        autor_avatar_url: row.autor_avatar_url ? String(row.autor_avatar_url) : null,
+        autor_oio_id: row.autor_oio_id == null ? null : String(row.autor_oio_id)
       }));
 
       if (!since) rows.reverse();
