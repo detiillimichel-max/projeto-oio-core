@@ -1,6 +1,6 @@
 /**
  * OIO Core — Indicador de digitação
- * Versão: 1.1.0
+ * Versão: 1.1.1
  * Status: módulo preparado, ainda não conectado ao CHAT.
  *
  * Objetivo:
@@ -15,8 +15,8 @@
  * O indicador só deve ser exibido após um evento real do outro usuário.
  */
 
-const OIO_DIGITANDO_VERSION = '1.1.0';
-const OIO_DIGITANDO_ICON = '/assets/img/digitando-pombo.svg';
+const OIO_DIGITANDO_VERSION = '1.1.1';
+const OIO_DIGITANDO_ICON = '/assets/img/digitando-pombo.gif';
 
 function criarIndicadorDigitando({ container, nome = 'Usuário' } = {}) {
   if (!container) {
