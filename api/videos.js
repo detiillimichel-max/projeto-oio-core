@@ -170,8 +170,8 @@ export default async function handler(req, res) {
     `);
     const total = Number(countResult.rows[0]?.total || 0);
 
-    if (total >= 10) {
-      return res.status(409).json({ error: 'O limite de 10 vídeos publicados já foi atingido.' });
+    if (total >= 30) {
+      return res.status(409).json({ error: 'O limite de 30 vídeos publicados já foi atingido.' });
     }
 
     const url = String(body.url || '').trim().slice(0, 2000);
