@@ -68,7 +68,7 @@ iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#E8E5DF
         const chatResponse=await fetch('/api/chat?limit=100',{credentials:'same-origin',cache:'no-store'});
         const chatData=await chatResponse.json().catch(()=>({}));
         const messages=Array.isArray(chatData.messages)?chatData.messages:[];
-        const other=[...messages].reverse().find(m=>m.autor&&String(m.autor)!==String(account.nome));
+        const other=[...messages].reverse().find(m=>m.autor&&String(m.autor)!==String(account.nome)&&m.autor_oio_id);
 
         if(other){
           if(other.autor_avatar_url){
@@ -81,6 +81,32 @@ iframe{position:fixed;inset:0;width:100%;height:100%;border:0;background:#E8E5DF
             otherAvatar.textContent=String(other.autor).trim().charAt(0).toUpperCase()||'G';
           }
           otherAvatar.title=String(other.autor);
+          otherAvatar.dataset.oioId=String(other.autor_oio_id);
+
+          // Ponte realtime: oio-core conhece os dois OIO IDs e entrega apenas
+          // essa configuração ao módulo de typing. O GIF continua local.
+          const typingHost=doc.createElement('div');
+          typingHost.id='oio-digitando-host';
+          typingHost.setAttribute('aria-hidden','false');
+          typingHost.style.cssText='position:fixed;left:18px;right:18px;bottom:105px;z-index:25;pointer-events:none;min-height:0;';
+          doc.body.appendChild(typingHost);
+
+          const typingStyle=doc.createElement('style');
+          typingStyle.textContent='.oio-digitando{display:inline-flex;align-items:center;gap:8px;max-width:90%;padding:7px 12px;border:1px solid rgba(36,31,26,.14);border-radius:18px;background:rgba(165,165,141,.96);color:#241f1a;font:600 12px/1.2 sans-serif;box-shadow:0 2px 8px rgba(36,31,26,.08);}.oio-digitando-pombo{flex:0 0 auto;}';
+          doc.head.appendChild(typingStyle);
+
+          doc.defaultView.__OIO_DIGITANDO_CONFIG__={
+            container:typingHost,
+            nome:String(other.autor),
+            input:doc.getElementById('msg-input'),
+            meuOioId:String(account.oio_id),
+            destinatarioOioId:String(other.autor_oio_id)
+          };
+
+          const typingModule=doc.createElement('script');
+          typingModule.type='module';
+          typingModule.textContent=`import { conectarDigitandoAbly } from '/assets/js/digitando.js';\nconst config=window.__OIO_DIGITANDO_CONFIG__;\nif(config?.container&&config?.input&&config?.meuOioId&&config?.destinatarioOioId){\n  try{\n    window.__oioDigitandoAbly=await conectarDigitandoAbly(config);\n    console.log('OIO Ably typing conectado:',config.meuOioId,'→',config.destinatarioOioId);\n  }catch(error){\n    console.error('OIO Ably typing initialization error:',error);\n  }\n}`;
+          doc.body.appendChild(typingModule);
         }
       }catch(error){
         console.error('OIO Core contact/navigation bridge error:',error);
